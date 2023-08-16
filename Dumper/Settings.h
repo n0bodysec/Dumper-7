@@ -3,16 +3,16 @@
 
 namespace Settings
 {
-	//Auto generated if no override is provided
+	// Auto generated if no override is provided
 	inline std::string GameName = "";
 	inline std::string GameVersion = "";
 
 	inline constexpr const char* SDKGenerationPath = "C:/Dumper-7";
 
-	//use nullptr if you don't want your files to be prefixed
+	// Use nullptr if you don't want your files to be prefixed
 	inline constexpr const char* FilePrefix = nullptr;
 
-	//includes only packages required for the games main package (the package with the most structs/classes/enums)
+	// Includes only packages required for the games main package (the package with the most structs/classes/enums)
 	inline constexpr const bool bIncludeOnlyRelevantPackages = false;
 
 	inline constexpr const bool bUseNamespaceForParams = true;

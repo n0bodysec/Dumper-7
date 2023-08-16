@@ -5,9 +5,9 @@
 #include "Generator.h"
 
 std::ofstream Package::DebugAssertionStream;
-PackageDependencyManager Package::PackageSorterClasses; // "PackageName_classes.hpp"
-PackageDependencyManager Package::PackageSorterStructs; // "PackageName_structs.hpp"
-PackageDependencyManager Package::PackageSorterParams; // "PackageName_parameters.hpp"
+PackageDependencyManager Package::PackageSorterClasses; // "PackageName_Classes.h"
+PackageDependencyManager Package::PackageSorterStructs; // "PackageName_Structs.h"
+PackageDependencyManager Package::PackageSorterParams; // "PackageName_Params.h"
 
 void PackageDependencyManager::GenerateClassSorted(class Package& Pack, int32 ClassIdx)
 {
@@ -71,13 +71,13 @@ void PackageDependencyManager::GetIncludesForPackage(
 		switch (FileType)
 		{
 		case EIncludeFileType::Struct:	
-			OutRef += std::format("\n{}#include \"SDK/{}{}_structs.hpp\"", (bCommentOut ? "//" : ""), (Settings::FilePrefix ? Settings::FilePrefix : ""), PackageName);
+			OutRef += std::format("\n{}#include \"SDK/{}{}_Structs.h\"", (bCommentOut ? "//" : ""), (Settings::FilePrefix ? Settings::FilePrefix : ""), PackageName);
 			break;
 		case EIncludeFileType::Class:
-			OutRef += std::format("\n{}#include \"SDK/{}{}_classes.hpp\"", (bCommentOut ? "//" : ""), (Settings::FilePrefix ? Settings::FilePrefix : ""), PackageName);
+			OutRef += std::format("\n{}#include \"SDK/{}{}_Classes.h\"", (bCommentOut ? "//" : ""), (Settings::FilePrefix ? Settings::FilePrefix : ""), PackageName);
 			break;
 		case EIncludeFileType::Params:
-			OutRef += std::format("\n{}#include \"SDK/{}{}_parameters.hpp\"", (bCommentOut ? "//" : ""), (Settings::FilePrefix ? Settings::FilePrefix : ""), PackageName);
+			OutRef += std::format("\n{}#include \"SDK/{}{}_Params.h\"", (bCommentOut ? "//" : ""), (Settings::FilePrefix ? Settings::FilePrefix : ""), PackageName);
 			break;
 		default:
 			break;
@@ -132,7 +132,7 @@ void Package::InitAssertionStream(const fs::path& GenPath)
 	{
 		DebugAssertionStream.open(GenPath / "Assertions.h");
 
-		DebugAssertionStream << "#pragma once\n#include\"SDK.hpp\"\n\nusing namespace SDK;\n\n";
+		DebugAssertionStream << "#pragma once\n#include\"SDK.h\"\n\nusing namespace SDK;\n\n";
 	}
 }
 
@@ -260,9 +260,9 @@ void Package::AddPackage(int32 Idx)
 
 void Package::Process(const std::vector<int32_t>& PackageMembers)
 {
-	//AddPackage(PackageObject.GetIndex());
+	// AddPackage(PackageObject.GetIndex());
 
-	//GatherDependencies(PackageMembers);
+	// GatherDependencies(PackageMembers);
 
 	for (int32_t Index : PackageMembers)
 	{

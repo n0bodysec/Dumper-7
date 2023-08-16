@@ -181,25 +181,25 @@ void FileWriter::SetFileType(FileType& Type)
 	switch (Type)
 	{
 	case FileWriter::FileType::Parameter:
-		CurrentFile += "_parameters.hpp";
+		CurrentFile += "_Params.h";
 		break;
 	case FileWriter::FileType::Function:
-		CurrentFile += "_functions.cpp";
+		CurrentFile += "_Functions.cpp";
 		break;
 	case FileWriter::FileType::Struct:
-		CurrentFile += "_structs.hpp";
+		CurrentFile += "_Structs.h";
 		break;
 	case FileWriter::FileType::Class:
-		CurrentFile += "_classes.hpp";
+		CurrentFile += "_Classes.h";
 		break;
 	case FileWriter::FileType::Source:
 		CurrentFile += ".cpp";
 		break;
 	case FileWriter::FileType::Header:
-		CurrentFile += ".hpp";
+		CurrentFile += ".h";
 		break;
 	default:
-		CurrentFile += ".hpp";
+		CurrentFile += ".h";
 		break;
 	}
 }
@@ -215,7 +215,7 @@ void FileWriter::SetFileHeader()
 )";
 
 	if (CurrentFileType == FileType::Function || CurrentFileType == FileType::Parameter || CurrentFileType == FileType::Source)
-		FileStream << "#include \"../SDK.hpp\"\n\n";
+		FileStream << "#include \"../SDK.h\"\n\n";
 
 	if (Settings::bUseNamespaceForSDK)
 		FileStream << std::format("namespace {}\n{{\n", Settings::SDKNamespaceName);

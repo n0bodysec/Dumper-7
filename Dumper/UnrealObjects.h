@@ -163,7 +163,7 @@ class UEEnum : public UEField
 	using UEField::UEField;
 
 public:
-	static std::unordered_map<int32, std::string> BigEnums; //ObjectArray::GetAllPackages()
+	static std::unordered_map<int32, std::string> BigEnums; // ObjectArray::GetAllPackages()
 
 	std::vector<TPair<FName, int64>> GetNameValuePairs() const;
 	std::string GetSingleName(int32 Index) const;

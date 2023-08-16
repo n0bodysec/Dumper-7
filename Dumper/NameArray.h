@@ -27,7 +27,7 @@ public:
 	void* GetAddress();
 
 private:
-	//Optional to avoid code duplication for FNamePool
+	// Optional to avoid code duplication for FNamePool
 	static void Init(uint8_t* FirstChunkPtr = nullptr, int64 NameEntryStringOffset = 0x0);
 };
 

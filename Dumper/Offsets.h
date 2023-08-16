@@ -6,7 +6,7 @@ namespace Off
 {
 	void Init();
 
-	//Offsets not to be used during generation but inside of the generated SDK
+	// Offsets not to be used during generation but inside of the generated SDK
 	namespace InSDK
 	{
 		void InitPE();

@@ -13,20 +13,20 @@ std::vector<std::future<void>> Generator::Futures;
 void Generator::Init()
 {
 	/* manual override */
-	//ObjectArray::Init(/*GObjects*/, /*ChunkSize*/, /*bIsChunked*/);
-	//FName::Init(/*FName::AppendString*/);
-	//Off::InSDK::InitPE(/*PEIndex*/);
+	// ObjectArray::Init(/*GObjects*/, /*ChunkSize*/, /*bIsChunked*/);
+	// FName::Init(/*FName::AppendString*/);
+	// Off::InSDK::InitPE(/*PEIndex*/);
 
 	/* Back4Blood*/
-	//InitObjectArrayDecryption([](void* ObjPtr) -> uint8* { return reinterpret_cast<uint8*>(uint64(ObjPtr) ^ 0x8375); });
+	// InitObjectArrayDecryption([](void* ObjPtr) -> uint8* { return reinterpret_cast<uint8*>(uint64(ObjPtr) ^ 0x8375); });
 
 	/* Multiversus [Unsupported, weird GObjects-struct]*/
-	//InitObjectArrayDecryption([](void* ObjPtr) -> uint8* { return reinterpret_cast<uint8*>(uint64(ObjPtr) ^ 0x1B5DEAFD6B4068C); });
+	// InitObjectArrayDecryption([](void* ObjPtr) -> uint8* { return reinterpret_cast<uint8*>(uint64(ObjPtr) ^ 0x1B5DEAFD6B4068C); });
 
 	ObjectArray::Init();
 	FName::Init();
 	Off::Init();
-	Off::InSDK::InitPE(); //Must be last, relies on offsets initialized in Off::Init()
+	Off::InSDK::InitPE(); // Must be last, relies on offsets initialized in Off::Init()
 
 	InitPredefinedMembers();
 	InitPredefinedFunctions();
@@ -167,7 +167,7 @@ void Generator::GenerateMappings()
 					NameIndex++;
 				}
 
-				MemberNames.push_back(MemberNameIt->second); //Index
+				MemberNames.push_back(MemberNameIt->second); // Index
 			}
 
 			Enums.emplace_back(std::move(MemberNames), EnumNameIt->second);
@@ -262,20 +262,20 @@ void Generator::GenerateMappings()
 	uint32 DataSize = Buffer.GetSize() + 0xF;
 
 	// HEADER
-	MappingsStream.Write<uint16>(0x30C4); //MAGIC
+	MappingsStream.Write<uint16>(0x30C4); // MAGIC
 	MappingsStream.Write<uint8>(0); // EUsmapVersion::Initial
-	//only when versioning >= 1
-	//MappingsStream.Write<int32>(false); // EUsmapVersion::PackageVersioning yes, someone decided int == bool in CUE4 Parser
+	// only when versioning >= 1
+	// MappingsStream.Write<int32>(false); // EUsmapVersion::PackageVersioning yes, someone decided int == bool in CUE4 Parser
 
-	//Versioning info here
+	// Versioning info here
 
-	MappingsStream.Write<uint8>(0); //CompressionMethode::None
+	MappingsStream.Write<uint8>(0); // CompressionMethode::None
 	MappingsStream.Write<uint32>(DataSize); // CompressedSize
 	MappingsStream.Write<uint32>(DataSize); // DecompressedSize
 	
 	MappingsStream.Write<uint32>(NameIndex); // NameCount
 	
-	//move data to other stream
+	// move data to other stream
 	MappingsStream.CopyFromOtherBuffer(Buffer);
 }
 
@@ -300,7 +300,7 @@ void Generator::HandlePackageGeneration(const fs::path* const SDKFolder, int32 P
 		std::string PackageName = Object.GetName();
 		std::string FileName = Settings::FilePrefix ? Settings::FilePrefix + PackageName : PackageName;
 
-		if (fs::exists(*SDKFolder / (FileName + "_classes.hpp")))
+		if (fs::exists(*SDKFolder / (FileName + "_Classes.h")))
 			FileName += "_1";
 
 		FileWriter ClassFile(*SDKFolder, FileName, FileWriter::FileType::Class);
@@ -434,7 +434,7 @@ void Generator::GenerateSDK()
 
 void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageIdx)
 {
-	std::ofstream HeaderStream(SdkPath / "SDK.hpp");
+	std::ofstream HeaderStream(SdkPath / "SDK.h");
 
 	HeaderStream << "#pragma once\n";
 	HeaderStream << R"(
@@ -481,8 +481,8 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 	if (Settings::bShouldXorStrings)
 		HeaderStream << "#define XORSTR(str) str\n";
 
-	HeaderStream << "\n#include \"PropertyFixup.hpp\"\n";
-	HeaderStream << "\n#include \"SDK/" << (Settings::FilePrefix ? Settings::FilePrefix : "") << "Basic.hpp\"\n";
+	HeaderStream << "\n#include \"PropertyFixup.h\"\n";
+	HeaderStream << "\n#include \"SDK/" << (Settings::FilePrefix ? Settings::FilePrefix : "") << "Basic.h\"\n";
 
 	if (Settings::bIncludeOnlyRelevantPackages)
 	{
@@ -531,7 +531,7 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 
 void Generator::GenerateFixupFile(const fs::path& SdkPath)
 {
-	std::ofstream FixupStream(SdkPath / "PropertyFixup.hpp");
+	std::ofstream FixupStream(SdkPath / "PropertyFixup.h");
 
 	FixupStream << "#pragma once\n\n";
 
@@ -2123,7 +2123,7 @@ public:
 		{ "FSetProperty", "FProperty" },
 		{ "FEnumProperty", "FProperty" }
 	}};
-	//bool Package::GeneratePredefinedMembers(const std::string& SuperName, Types::Struct& Struct, int32 StructSize, int32 SuperSize)
+	// bool Package::GeneratePredefinedMembers(const std::string& SuperName, Types::Struct& Struct, int32 StructSize, int32 SuperSize)
 
 	ClassSizePairs.reserve(FPropertyClassSuperPairs.size());
 	for (auto& [ClassName, SuperName] : FPropertyClassSuperPairs)
@@ -2140,146 +2140,146 @@ public:
 	}
 
 
-	//-TUObjectArray
-	//-TArray
-	//-FString
-	//-FName [AppendString()]
-	//-TSubclassOf<Type>
+	// -TUObjectArray
+	// -TArray
+	// -FString
+	// -FName [AppendString()]
+	// -TSubclassOf<Type>
 	// TSet<Type>
 	// TMap<Type>
-	//-FText
+	// -FText
 }
 
-//class FWeakObjectPtr
-//{
-//protected:
-//	int32		ObjectIndex;
-//	int32		ObjectSerialNumber;
-//
-//public:
-//	class UObject* Get() const;
-//
-//	class UObject* operator->() const;
-//
-//	bool operator==(const FWeakObjectPtr& Other) const;
-//	bool operator!=(const FWeakObjectPtr& Other) const;
-//
-//	bool operator==(const class UObject* Other) const;
-//	bool operator!=(const class UObject* Other) const;
-//};
-//
-//template<typename UEType>
-//struct TWeakObjectPtr : FWeakObjectPtr
-//{
-//public:
-//	class UEType* Get() const;
-//
-//	class UEType* operator->() const;
-//};
-//
-//class UObject* FWeakObjectPtr::Get() const
-//{
-//	return UObject::GObjects->GetByIndex(ObjectIndex);
-//}
-//
-//class UObject* FWeakObjectPtr::operator->() const
-//{
-//	return UObject::GObjects->GetByIndex(ObjectIndex);
-//}
-//
-//bool FWeakObjectPtr::operator==(const FWeakObjectPtr& Other) const
-//{
-//	return ObjectIndex == Other.ObjectIndex;
-//}
-//bool FWeakObjectPtr::operator!=(const FWeakObjectPtr& Other) const
-//{
-//	return ObjectIndex != Other.ObjectIndex;
-//}
-//
-//bool FWeakObjectPtr::operator==(const class UObject* Other) const
-//{
-//	return ObjectIndex == Obj->Index;
-//}
-//bool FWeakObjectPtr::operator!=(const class UObject* Other) const
-//{
-//	return ObjectIndex != Obj->Index;
-//}
-//
-//
-//class UEType* TWeakObjectPtr<UEType>::Get() const
-//{
-//	return UObject::GObjects->GetByIndex(ObjectIndex);
-//}
-//
-//class UEType* TWeakObjectPtr<UEType>::operator->() const
-//{
-//	return UObject::GObjects->GetByIndex(ObjectIndex);
-//}
+// class FWeakObjectPtr
+// {
+// protected:
+// 	int32		ObjectIndex;
+// 	int32		ObjectSerialNumber;
+
+// public:
+// 	class UObject* Get() const;
+
+// 	class UObject* operator->() const;
+
+// 	bool operator==(const FWeakObjectPtr& Other) const;
+// 	bool operator!=(const FWeakObjectPtr& Other) const;
+
+// 	bool operator==(const class UObject* Other) const;
+// 	bool operator!=(const class UObject* Other) const;
+// };
+
+// template<typename UEType>
+// struct TWeakObjectPtr : FWeakObjectPtr
+// {
+// public:
+// 	class UEType* Get() const;
+
+// 	class UEType* operator->() const;
+// };
+
+// class UObject* FWeakObjectPtr::Get() const
+// {
+// 	return UObject::GObjects->GetByIndex(ObjectIndex);
+// }
+
+// class UObject* FWeakObjectPtr::operator->() const
+// {
+// 	return UObject::GObjects->GetByIndex(ObjectIndex);
+// }
+
+// bool FWeakObjectPtr::operator==(const FWeakObjectPtr& Other) const
+// {
+// 	return ObjectIndex == Other.ObjectIndex;
+// }
+// bool FWeakObjectPtr::operator!=(const FWeakObjectPtr& Other) const
+// {
+// 	return ObjectIndex != Other.ObjectIndex;
+// }
+
+// bool FWeakObjectPtr::operator==(const class UObject* Other) const
+// {
+// 	return ObjectIndex == Obj->Index;
+// }
+// bool FWeakObjectPtr::operator!=(const class UObject* Other) const
+// {
+// 	return ObjectIndex != Obj->Index;
+// }
 
 
-//class TUObjectArray
-//{
-//	struct FUObjectItem
-//	{
-//		class UObject* Object;
-//		uint8 Pad[0x10];
-//	};
-//
-//	FUObjectItem* Objects;
-//	int32_t MaxElements;
-//	int32_t NumElements;
-//
-//public:
-//	inline int Num() const
-//	{
-//		return NumElements;
-//	}
-//
-//	inline class UObject* GetByIndex(const int32 Index) const
-//	{
-//		if (Index < 0 || Index > NumElements)
-//			return nullptr;
-//
-//		return Objects[Index].Object;
-//	}
-//};
-//
-//class TUObjectArray
-//{
-//	enum
-//	{
-//		ElementsPerChunk = 0x{:X},
-//	};
-//
-//	struct FUObjectItem
-//	{
-//		class UObject* Object;
-//		uint8 Pad[0x10];
-//	};
-//
-//	FUObjectItem** Objects;
-//	uint8_t Pad_0[0x08];
-//	int32_t MaxElements;
-//	int32_t NumElements;
-//	int32_t MaxChunks;
-//	int32_t NumChunks;
-//
-//	inline int Num() const
-//	{
-//		return NumElements;
-//	}
-//
-//	inline class UObject* GetByIndex(const int32 Index) const
-//	{
-//		if (Index < 0 || Index > NumElements)
-//			return nullptr;
-//
-//		const int32 ChunkIndex = Index / ElementsPerChunk;
-//		const int32 InChunkIdx = Index % ElementsPerChunk;
-//
-//		return Objects[ChunkIndex][InChunkIdx].Object;
-//	}
-//};
+// class UEType* TWeakObjectPtr<UEType>::Get() const
+// {
+// 	return UObject::GObjects->GetByIndex(ObjectIndex);
+// }
+
+// class UEType* TWeakObjectPtr<UEType>::operator->() const
+// {
+// 	return UObject::GObjects->GetByIndex(ObjectIndex);
+// }
+
+
+// class TUObjectArray
+// {
+// 	struct FUObjectItem
+// 	{
+// 		class UObject* Object;
+// 		uint8 Pad[0x10];
+// 	};
+
+// 	FUObjectItem* Objects;
+// 	int32_t MaxElements;
+// 	int32_t NumElements;
+
+// public:
+// 	inline int Num() const
+// 	{
+// 		return NumElements;
+// 	}
+
+// 	inline class UObject* GetByIndex(const int32 Index) const
+// 	{
+// 		if (Index < 0 || Index > NumElements)
+// 			return nullptr;
+
+// 		return Objects[Index].Object;
+// 	}
+// };
+
+// class TUObjectArray
+// {
+// 	enum
+// 	{
+// 		ElementsPerChunk = 0x{:X},
+// 	};
+
+// 	struct FUObjectItem
+// 	{
+// 		class UObject* Object;
+// 		uint8 Pad[0x10];
+// 	};
+
+// 	FUObjectItem** Objects;
+// 	uint8_t Pad_0[0x08];
+// 	int32_t MaxElements;
+// 	int32_t NumElements;
+// 	int32_t MaxChunks;
+// 	int32_t NumChunks;
+
+// 	inline int Num() const
+// 	{
+// 		return NumElements;
+// 	}
+
+// 	inline class UObject* GetByIndex(const int32 Index) const
+// 	{
+// 		if (Index < 0 || Index > NumElements)
+// 			return nullptr;
+
+// 		const int32 ChunkIndex = Index / ElementsPerChunk;
+// 		const int32 InChunkIdx = Index % ElementsPerChunk;
+
+// 		return Objects[ChunkIndex][InChunkIdx].Object;
+// 	}
+// };
 
 struct FText
 {
@@ -2327,143 +2327,143 @@ public:
 };
 
 
-//template<class T>
-//class TArray
-//{
-//protected:
-//	T* Data;
-//	int32 NumElements;
-//	int32 MaxElements;
-//
-//public:
-//
-//	TArray() = default;
-//
-//	inline TArray(int32 Size)
-//		:NumElements(0), MaxElements(Size), Data(reinterpret_cast<T*>(malloc(sizeof(T) * Size)))
-//	{
-//	}
-//
-//	inline T& operator[](uint32 Index)
-//	{
-//		return Data[Index];
-//	}
-//	inline const T& operator[](uint32 Index) const
-//	{
-//		return Data[Index];
-//	}
-//
-//	inline int32 Num()
-//	{
-//		return NumElements;
-//	}
-//
-//	inline int32 Max()
-//	{
-//		return MaxElements;
-//	}
-//
-//	inline int32 GetSlack()
-//	{
-//		return MaxElements - NumElements;
-//	}
-//
-//	inline bool IsValid()
-//	{
-//		return Data != nullptr;
-//	}
-//
-//	inline bool IsValidIndex(int32 Index)
-//	{
-//		return Index >= 0 && Index < NumElements;
-//	}
-//
-//	inline bool IsValidIndex(uint32 Index)
-//	{
-//		return Index < NumElements;
-//	}
-//
-//	inline void ResetNum()
-//	{
-//		NumElements = 0;
-//	}
-//};
+// template<class T>
+// class TArray
+// {
+// protected:
+// 	T* Data;
+// 	int32 NumElements;
+// 	int32 MaxElements;
 
-//class FString : public TArray<wchar_t>
-//{
-//public:
-//	inline FString() = default;
-//
-//	using TArray::TArray;
-//
-//	inline FString(const wchar_t* WChar)
-//	{
-//		MaxElements = NumElements = *WChar ? std::wcslen(WChar) + 1 : 0;
-//
-//		if (NumElements)
-//		{
-//			Data = const_cast<wchar_t*>(WChar);
-//		}
-//	}
-//
-//	inline FString operator=(const wchar_t*&& Other)
-//	{
-//		return FString(Other);
-//	}
-//
-//	inline std::wstring ToWString()
-//	{
-//		if (IsValid())
-//		{
-//			return Data;
-//		}
-//
-//		return L"";
-//	}
-//
-//	inline std::string ToString()
-//	{
-//		if (IsValid())
-//		{
-//			std::wstring WData(Data);
-//			return std::string(WData.begin(), WData.end());
-//		}
-//
-//		return "";
-//	}
-//};
+// public:
 
-//class FName
-//{
-//public:
-//	int32 ComparisonIndex;
-//	int32 Number;
-//
-//	inline std::string ToString()
-//	{
-//		static FString TempString(1024);
-//		static auto AppendString = reinterpret_cast<void(*)(FName*, FString&)>(uintptr_t(GetModuleHandle(0)) + OFFSET));
-//
-//		AppendString(this, TempString);
-//
-//		std::string OutputString = TempString.ToString();
-//		TempString.ResetNum();
-//
-//		size_t pos = OutputString.rfind('/');
-//
-//		if (pos == std::string::npos)
-//			return OutputString;
-//
-//		return OutputString.substr(pos + 1);
-//	}
-//
-//	inline bool operator==(const FName& Other)
-//	{
-//		return ComparisonIndex == Other.ComparisonIndex;
-//	}
-//
-//	inline bool operator!=(const FName& Other)
-//	{
-//		return ComparisonIndex != Other.ComparisonIndex;
-//	}
-//};
+// 	TArray() = default;
+
+// 	inline TArray(int32 Size)
+// 		:NumElements(0), MaxElements(Size), Data(reinterpret_cast<T*>(malloc(sizeof(T) * Size)))
+// 	{
+// 	}
+
+// 	inline T& operator[](uint32 Index)
+// 	{
+// 		return Data[Index];
+// 	}
+// 	inline const T& operator[](uint32 Index) const
+// 	{
+// 		return Data[Index];
+// 	}
+
+// 	inline int32 Num()
+// 	{
+// 		return NumElements;
+// 	}
+
+// 	inline int32 Max()
+// 	{
+// 		return MaxElements;
+// 	}
+
+// 	inline int32 GetSlack()
+// 	{
+// 		return MaxElements - NumElements;
+// 	}
+
+// 	inline bool IsValid()
+// 	{
+// 		return Data != nullptr;
+// 	}
+
+// 	inline bool IsValidIndex(int32 Index)
+// 	{
+// 		return Index >= 0 && Index < NumElements;
+// 	}
+
+// 	inline bool IsValidIndex(uint32 Index)
+// 	{
+// 		return Index < NumElements;
+// 	}
+
+// 	inline void ResetNum()
+// 	{
+// 		NumElements = 0;
+// 	}
+// };
+
+// class FString : public TArray<wchar_t>
+// {
+// public:
+// 	inline FString() = default;
+
+// 	using TArray::TArray;
+
+// 	inline FString(const wchar_t* WChar)
+// 	{
+// 		MaxElements = NumElements = *WChar ? std::wcslen(WChar) + 1 : 0;
+
+// 		if (NumElements)
+// 		{
+// 			Data = const_cast<wchar_t*>(WChar);
+// 		}
+// 	}
+
+// 	inline FString operator=(const wchar_t*&& Other)
+// 	{
+// 		return FString(Other);
+// 	}
+
+// 	inline std::wstring ToWString()
+// 	{
+// 		if (IsValid())
+// 		{
+// 			return Data;
+// 		}
+
+// 		return L"";
+// 	}
+
+// 	inline std::string ToString()
+// 	{
+// 		if (IsValid())
+// 		{
+// 			std::wstring WData(Data);
+// 			return std::string(WData.begin(), WData.end());
+// 		}
+
+// 		return "";
+// 	}
+// };
+
+// class FName
+// {
+// public:
+// 	int32 ComparisonIndex;
+// 	int32 Number;
+
+// 	inline std::string ToString()
+// 	{
+// 		static FString TempString(1024);
+// 		static auto AppendString = reinterpret_cast<void(*)(FName*, FString&)>(uintptr_t(GetModuleHandle(0)) + OFFSET));
+
+// 		AppendString(this, TempString);
+
+// 		std::string OutputString = TempString.ToString();
+// 		TempString.ResetNum();
+
+// 		size_t pos = OutputString.rfind('/');
+
+// 		if (pos == std::string::npos)
+// 			return OutputString;
+
+// 		return OutputString.substr(pos + 1);
+// 	}
+
+// 	inline bool operator==(const FName& Other)
+// 	{
+// 		return ComparisonIndex == Other.ComparisonIndex;
+// 	}
+
+// 	inline bool operator!=(const FName& Other)
+// 	{
+// 		return ComparisonIndex != Other.ComparisonIndex;
+// 	}
+// };

@@ -21,8 +21,8 @@ struct PackageDependencyManager
 {
 	friend class Package;
 
-	//int32 = PackageIdx
-	//pair<bool, set<int32>> = pair<bIsIncluded, set<DependencyIndices>>
+	// int32 = PackageIdx
+	// pair<bool, set<int32>> = pair<bIsIncluded, set<DependencyIndices>>
 	std::unordered_map<int32, std::pair<bool, std::unordered_set<int32>>> AllDependencies;
 
 	PackageDependencyManager() = default;
@@ -77,9 +77,9 @@ class Package
 
 public:
 	static std::ofstream DebugAssertionStream;
-	static PackageDependencyManager PackageSorterClasses; // "PackageName_classes.hpp"
-	static PackageDependencyManager PackageSorterStructs; // "PackageName_structs.hpp"
-	static PackageDependencyManager PackageSorterParams; // "PackageName_parameters.hpp"
+	static PackageDependencyManager PackageSorterClasses; // "PackageName_Classes.h"
+	static PackageDependencyManager PackageSorterStructs; // "PackageName_Structs.h"
+	static PackageDependencyManager PackageSorterParams; // "PackageName_Params.h"
 
 	PackageDependencyManager StructSorter;
 	PackageDependencyManager ClassSorter;

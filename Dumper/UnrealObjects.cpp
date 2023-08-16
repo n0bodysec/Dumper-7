@@ -41,7 +41,7 @@ UEFFieldClass UEFFieldClass::GetSuper() const
 
 FName UEFFieldClass::GetFName() const
 {
-	return FName(Class + Off::FFieldClass::Name); //Not the real FName, but a wrapper which holds the address of a FName
+	return FName(Class + Off::FFieldClass::Name); // Not the real FName, but a wrapper which holds the address of a FName
 }
 
 bool UEFFieldClass::IsType(EClassCastFlags Flags) const
@@ -121,7 +121,7 @@ UEFFieldClass UEFField::GetClass() const
 
 FName UEFField::GetFName() const
 {
-	return FName(Field + Off::FField::Name); //Not the real FName, but a wrapper which holds the address of a FName
+	return FName(Field + Off::FField::Name); // Not the real FName, but a wrapper which holds the address of a FName
 }
 
 UEFField UEFField::GetNext() const
@@ -223,7 +223,7 @@ UEClass UEObject::GetClass() const
 
 FName UEObject::GetFName() const
 {
-	return FName(Object + Off::UObject::Name); //Not the real FName, but a wrapper which holds the address of a FName
+	return FName(Object + Off::UObject::Name); // Not the real FName, but a wrapper which holds the address of a FName
 }
 
 UEObject UEObject::GetOuter() const
@@ -661,10 +661,10 @@ FName UEProperty::GetFName() const
 {
 	if (Settings::Internal::bUseFProperty)
 	{
-		return FName(Base + Off::FField::Name); //Not the real FName, but a wrapper which holds the address of a FName
+		return FName(Base + Off::FField::Name); // Not the real FName, but a wrapper which holds the address of a FName
 	}
 
-	return FName(Base + Off::UObject::Name); //Not the real FName, but a wrapper which holds the address of a FName
+	return FName(Base + Off::UObject::Name); // Not the real FName, but a wrapper which holds the address of a FName
 }
 
 int32 UEProperty::GetArrayDim() const

@@ -244,7 +244,7 @@ public:
 	uint8* Address;
 
 private:
-	//pasted
+	// pasted
 	static std::vector<int32_t> PatternToBytes(const char* pattern)
 	{
 		auto bytes = std::vector<int>{};
@@ -267,7 +267,7 @@ private:
 	static bool IsFunctionRet(uint8* Address)
 	{
 		int Align = 0x10 - (uintptr_t(Address) % 0x10);
-		//if (Opcode == RET && (OpcodeBefore is a POP opcode || OpcodeTwoBefore is a different POP Opcode)
+		// if (Opcode == RET && (OpcodeBefore is a POP opcode || OpcodeTwoBefore is a different POP Opcode)
 		return Address[0] == 0xC3 && Address[Align] == 0x40 && ((Address[-1] >= 0x58 && Address[-1] <= 0x5F) || (Address[-2] == 0x41 && (Address[-1] >= 0x58 && Address[-1] <= 0x5F)));
 	}
 
@@ -342,7 +342,7 @@ public:
 		{
 			for (int j = 0; j < 0x50; j++)
 			{
-				//opcode: call
+				// opcode: call
 				if (Address[i + j] == 0xE8)
 				{
 					uint8* CallAddr = Address + i + j;
@@ -395,7 +395,7 @@ inline MemAddress FindByString(Type RefStr)
 
 		std::string SectionName = (const char*)CurrentSection.Name;
 
-		//std::cout << "Section: " << SectionName << " at 0x" << (void*)(CurrentSection.VirtualAddress + ImageBase) << "\n";
+		// std::cout << "Section: " << SectionName << " at 0x" << (void*)(CurrentSection.VirtualAddress + ImageBase) << "\n";
 
 		if (SectionName == ".rdata" && !DataSection)
 		{
@@ -415,7 +415,7 @@ inline MemAddress FindByString(Type RefStr)
 		{
 			if (strcmp((const char*)RefStr, (const char*)(DataSection + i)) == 0)
 			{
-				//std::cout << "FoundStr ref: " << (const char*)(DataSection + i) << "\n";
+				// std::cout << "FoundStr ref: " << (const char*)(DataSection + i) << "\n";
 
 				StringAddress = DataSection + i;
 			}
@@ -424,7 +424,7 @@ inline MemAddress FindByString(Type RefStr)
 		{
 			if (wcscmp((const wchar_t*)RefStr, (const wchar_t*)(DataSection + i)) == 0)
 			{
-				//std::wcout << L"FoundStr wref: " << (const wchar_t*)(DataSection + i) << L"\n";
+				// std::wcout << L"FoundStr wref: " << (const wchar_t*)(DataSection + i) << L"\n";
 
 				StringAddress = DataSection + i;
 			}
@@ -440,7 +440,7 @@ inline MemAddress FindByString(Type RefStr)
 
 			if (StrPtr == StringAddress)
 			{
-				//std::cout << "Found Address: 0x" << (void*)(TextSection + i) << "\n";
+				// std::cout << "Found Address: 0x" << (void*)(TextSection + i) << "\n";
 
 				return { TextSection + i };
 			}
@@ -482,7 +482,7 @@ inline MemAddress FindByStringInAllSections(Type RefStr)
 			{
 				if (strcmp((const char*)RefStr, (const char*)StrPtr) == 0)
 				{
-					//std::cout << "FoundStr ref: " << (const char*)(SearchStart + i) << "\n";
+					// std::cout << "FoundStr ref: " << (const char*)(SearchStart + i) << "\n";
 
 					return { SearchStart + i };
 				}
@@ -493,7 +493,7 @@ inline MemAddress FindByStringInAllSections(Type RefStr)
 
 				if (wcscmp((const wchar_t*)RefStr, (const wchar_t*)StrPtr) == 0) 
 				{
-					//std::wcout << L"FoundStr wref: " << (const wchar_t*)(SearchStart + i) << L"\n";
+					// std::wcout << L"FoundStr wref: " << (const wchar_t*)(SearchStart + i) << L"\n";
 
 					return { SearchStart + i };
 				}

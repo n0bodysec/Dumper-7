@@ -130,7 +130,7 @@ namespace Types
 	{
 	private:
 		std::vector<Function> ClassFunctions;
-		std::string RawName; //For StaticClass()
+		std::string RawName; // For StaticClass()
 
 	public:
 
