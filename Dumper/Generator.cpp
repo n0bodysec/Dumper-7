@@ -452,6 +452,8 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 
 	HeaderStream << "#include <string>\n";
 	HeaderStream << "#include <Windows.h>\n";
+	HeaderStream << "#include <vector>\n";
+	HeaderStream << "#include <locale>\n";
 	HeaderStream << "#include <iostream>\n";
 	HeaderStream << "#include <type_traits>\n\n";
 
@@ -552,15 +554,15 @@ void Generator::InitPredefinedMembers()
 
 	// TODO: fix (not working?)
 	PredefinedMembers["UWorld"] = {
-		{ "static class UWorld**", "GWorld", 0x00, 0x00 },
+		{ "static class UWorld**", "GWorld", 0x00, 0x00 }
 	};
 	
 	PredefinedMembers["UObject"] =
 	{
 		{ "static class TUObjectArray*", "GObjects", 0x00, 0x00 },
-		{ "void*", "Vft", Off::UObject::Vft, 0x08 },
+		{ "void*", "Vft", Off::UObject::Vft, 0x08 }, // TODO: not working
 		{ "int32 ", "Flags", Off::UObject::Flags, 0x04 },
-		{ "int32", "Index", Off::UObject::Index, 0x04 },
+		{ "int32", "InternalIndex", Off::UObject::Index, 0x04 },
 		{ "class UClass*", "Class", Off::UObject::Class, 0x08 },
 		{ "class FName", "Name", Off::UObject::Name, Off::InSDK::FNameSize },
 		{ "class UObject*", "Outer", Off::UObject::Outer, 0x08 }
@@ -1229,32 +1231,33 @@ public:
 	{
 		return Data[Index];
 	}
+
 	inline const T& operator[](uint32 Index) const
 	{
 		return Data[Index];
 	}
 
-	inline int32 Num()
+	inline int32 Num() const
 	{
 		return NumElements;
 	}
 
-	inline int32 Max()
+	inline int32 Max() const
 	{
 		return MaxElements;
 	}
 
-	inline int32 GetSlack()
+	inline int32 GetSlack() const
 	{
 		return MaxElements - NumElements;
 	}
 
-	inline bool IsValid()
+	inline bool IsValid() const
 	{
 		return Data != nullptr;
 	}
 
-	inline bool IsValidIndex(int32 Index)
+	inline bool IsValidIndex(int32 Index) const
 	{
 		return Index >= 0 && Index < NumElements;
 	}
@@ -1290,7 +1293,7 @@ public:
 		return FString(Other);
 	}
 
-	inline std::wstring ToWString()
+	inline std::wstring ToWString() const
 	{
 		if (IsValid())
 		{
@@ -1300,12 +1303,14 @@ public:
 		return L"";
 	}
 
-	inline std::string ToString()
+	inline std::string ToString() const
 	{
 		if (IsValid())
 		{
-			std::wstring WData(Data);
-			return std::string(WData.begin(), WData.end());
+			size_t length = std::wcslen(Data);
+			std::string str(length, '\0');
+			std::use_facet<std::ctype<wchar_t>>(std::locale()).narrow(Data, Data + length, '?', &str[0]);
+			return str;
 		}
 
 		return "";
@@ -1694,22 +1699,33 @@ class FText
 public:
 	FTextData* Data;
 	char UnknownData[0x10];
+
 	wchar_t* Get() const 
 	{
-		if (Data) 
-		{
-			return Data->Name;
-		}
-		return nullptr;
+		return Data != nullptr ? Data->Name : nullptr;
 	}
-	std::string ToString()
+
+	std::string ToString() const
 	{
-		if (Data)
-		{
-			std::wstring Temp(Data->Name);
-			return std::string(Temp.begin(), Temp.end());
-		}
-		return "";
+		wchar_t* name = Get();
+		if (!name)
+			return "";
+	
+		size_t length = std::wcslen(name);
+		std::string str(length, '\0');
+		std::use_facet<std::ctype<wchar_t>>(std::locale()).narrow(name, name + length, '?', &str[0]);
+		
+		return str;
+	}
+
+	std::wstring ToWString() const
+	{
+		wchar_t* name = Get();
+		if (!name)
+			return L"";
+		
+		std::wstring str(name);
+		return str;
 	}
 };
 )");
@@ -1932,11 +1948,11 @@ bool FWeakObjectPtr::operator!=(const FWeakObjectPtr& Other) const
 
 bool FWeakObjectPtr::operator==(const class UObject* Other) const
 {
-	return ObjectIndex == Other->Index;
+	return ObjectIndex == Other->InternalIndex;
 }
 bool FWeakObjectPtr::operator!=(const class UObject* Other) const
 {
-	return ObjectIndex != Other->Index;
+	return ObjectIndex != Other->InternalIndex;
 }
 )");
 

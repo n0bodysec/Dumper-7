@@ -24,7 +24,17 @@ inline std::string MakeNameValid(std::string&& Name)
 
 	for (char& c : Name)
 	{
-		if (c != '_' && !((c <= 'z' && c >= 'a') || (c <= 'Z' && c >= 'A') || (c <= '9' && c >= '0')))
+		if (c == '+')
+		{
+			c = 'P';
+			Name.insert(&c - &Name[0] + 1, "lus");
+		}
+		else if (c == '-')
+		{
+			c = 'M';
+			Name.insert(&c - &Name[0] + 1, "inus");
+		}
+		else if (c != '_' && !((c <= 'z' && c >= 'a') || (c <= 'Z' && c >= 'A') || (c <= '9' && c >= '0')))
 		{
 			c = '_';
 		}

@@ -159,7 +159,7 @@ int32 Package::GeneratePredefinedMembers(const std::string& ClassName, Types::St
 				Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, Member.Offset - PrevPropertyEnd, std::format("0x{:04X} (0x{:04X}) MISSED OFFSET (FIX SIZE AFTER LAST PREDEFINED PROPERTY)", PrevPropertyEnd, Member.Offset - PrevPropertyEnd)));
 			}
 
-			Struct.AddMember(Types::Member(Member.Type, Member.Name, std::format("0x{:04X} (0x{:04X}) NOT AUTO-GENERATED PROPERTY", Member.Offset, Member.Size)));
+			Struct.AddMember(Types::Member(Member.Type, Member.Name, std::format("0x{:04X} (0x{:04X}) PREDEFINED PROPERTY", Member.Offset, Member.Size)));
 
 			PrevPropertyEnd = Member.Offset + Member.Size;
 		}
@@ -532,7 +532,7 @@ Types::Struct Package::GenerateStruct(UEStruct Struct, bool bIsFunction)
 
 	RetStruct.AddCommentEx("/**");
 	RetStruct.AddCommentEx(" * " + Struct.GetFullName());
-	RetStruct.AddCommentEx(std::format(" * Size -> 0x{:X} (FullSize[0x{:X}] - InheritedSize[0x{:X}])", Size - SuperSize, Size, SuperSize));
+	RetStruct.AddCommentEx(std::format(" * Size -> 0x{:04X} (FullSize[0x{:04X}] - InheritedSize[0x{:04X}])", Size - SuperSize, Size, SuperSize));
 	RetStruct.AddCommentEx(" */");
 
 	std::vector<UEProperty> Properties = Struct.GetProperties();
@@ -594,7 +594,7 @@ Types::Class Package::GenerateClass(UEClass Class)
 
 	RetClass.AddCommentEx("/**");
 	RetClass.AddCommentEx(" * " + FullName);
-	RetClass.AddCommentEx(std::format(" * Size -> 0x{:X} (FullSize[0x{:X}] - InheritedSize[0x{:X}])", Size - SuperSize, Size, SuperSize));
+	RetClass.AddCommentEx(std::format(" * Size -> 0x{:04X} (FullSize[0x{:04X}] - InheritedSize[0x{:04X}])", Size - SuperSize, Size, SuperSize));
 	RetClass.AddCommentEx(" */");
 
 	Types::Function StaticClass("class UClass*", "StaticClass", ClassName, {}, true);
