@@ -436,15 +436,16 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 {
 	std::ofstream HeaderStream(SdkPath / "SDK.hpp");
 
-	HeaderStream << "#pragma once\n\n";
+	HeaderStream << "#pragma once\n";
 	HeaderStream << R"(
 // ---------------------------- \\
 //           Dumper-7           \\
 // ---------------------------- \\
+
 )";
 
-	HeaderStream << std::format("// {}\n", Settings::GameName);
-	HeaderStream << std::format("// {}\n\n", Settings::GameVersion);
+	HeaderStream << std::format("// Game: {}\n", Settings::GameName);
+	HeaderStream << std::format("// Version: {}\n", Settings::GameVersion);
 	HeaderStream << std::format("// Main-package: {}\n\n", ObjectArray::GetByIndex(BiggestPackageIdx).GetValidName());
 
 	HeaderStream << "#define WINDOWS_IGNORE_PACKING_MISMATCH\n\n";
@@ -825,12 +826,11 @@ R"(
 			},
 			{
 				"\tinline void ProcessEvent(class UFunction* Function, void* Parms) const", "",
-				std::format(
 R"(
 	{{
 		return GetVFunction<void(*)(const UObject*, class UFunction*, void*)>(this, PROCESSEVENT_INDEX)(this, Function, Parms);
 	}}
-)")
+)"
 			}
 		}
 	};
@@ -1058,30 +1058,29 @@ void Generator::GenerateBasicFile(const fs::path& SdkPath)
 
 	BasicHeader.Write(
 		R"(
-bool InitSdk(const std::wstring& moduleName, uintptr_t gObjectsOffset, uintptr_t gNamesOffset, uintptr_t gWorldOffset);
+bool InitSdk(const std::wstring& ModuleName, uintptr_t GObjectsOffset, uintptr_t GNamesOffset, uintptr_t GWorldOffset);
 bool InitSdk();
 )");
 
-	BasicSource.Write(
-		R"(
-bool InitSdk(const std::wstring& moduleName, uintptr_t gObjectsOffset, uintptr_t gNamesOffset, uintptr_t gWorldOffset)
-{
-	auto mBaseAddress = reinterpret_cast<uintptr_t>(GetModuleHandleW(moduleName.c_str()));
+	BasicSource.Write(std::format(R"(
+bool InitSdk(const std::wstring& ModuleName, uintptr_t GObjectsOffset, uintptr_t GNamesOffset, uintptr_t GWorldOffset)
+{{
+	auto mBaseAddress = reinterpret_cast<uintptr_t>(GetModuleHandleW(ModuleName.c_str()));
 	if (!mBaseAddress)
 		return false;
 
-	UObject::GObjects = reinterpret_cast<TUObjectArray*>(mBaseAddress + gObjectsOffset);
-	FName::GNames = reinterpret_cast<SDK::FNamePool*>(mBaseAddress + gNamesOffset);
-	UWorld::GWorld = reinterpret_cast<SDK::UWorld**>(mBaseAddress + gWorldOffset);
+	UObject::GObjects = reinterpret_cast<TUObjectArray*>(mBaseAddress + GObjectsOffset);
+	FName::GNames = {}(mBaseAddress + GNamesOffset);
+	UWorld::GWorld = reinterpret_castUWorld**>(mBaseAddress + GWorldOffset);
 
 	return true;
-}
+}}
 
 bool InitSdk()
-{
+{{
 	return InitSdk(MODULE_NAME, GOBJECTS_OFFSET, GNAMES_OFFSET, GWORLD_OFFSET);
-}		
-)");
+}}
+)", Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseNamePool ? "reinterpret_cast<FNamePool*>" : "*reinterpret_cast<TNameEntryArray**>" : "reinterpret_cast<void*>"));
 
 	BasicHeader.Write(
 		R"(
@@ -1598,8 +1597,7 @@ public:
 )", Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseNamePool ? "FNamePool" : "TNameEntryArray" : "void"
   , FNameMemberStr
   , GetDisplayIndexString
-  , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString
-  , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseNamePool ? "reinterpret_cast<FNamePool*>" : "*reinterpret_cast<TNameEntryArray**>" : "reinterpret_cast<void*>"));
+  , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString));
 
 	BasicHeader.Write(
 		R"(
