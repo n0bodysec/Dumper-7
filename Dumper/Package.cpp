@@ -156,17 +156,17 @@ int32 Package::GeneratePredefinedMembers(const std::string& ClassName, Types::St
 		{
 			if (Member.Offset > PrevPropertyEnd)
 			{
-				Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, Member.Offset - PrevPropertyEnd, "Fixing Size After Last (Predefined) Property  [ Dumper-7 ]"));
+				Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, Member.Offset - PrevPropertyEnd, std::format("0x{:04X} (0x{:04X}) MISSED OFFSET (FIX SIZE AFTER LAST PREDEFINED PROPERTY)", PrevPropertyEnd, Member.Offset - PrevPropertyEnd)));
 			}
 
-			Struct.AddMember(Types::Member(Member.Type, Member.Name, std::format("(0x{:02X}[0x{:02X}]) NOT AUTO-GENERATED PROPERTY", Member.Offset, Member.Size)));
+			Struct.AddMember(Types::Member(Member.Type, Member.Name, std::format("0x{:04X} (0x{:04X}) NOT AUTO-GENERATED PROPERTY", Member.Offset, Member.Size)));
 
 			PrevPropertyEnd = Member.Offset + Member.Size;
 		}
 
 		if (StructSize > PrevPropertyEnd)
 		{
-			Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, StructSize - PrevPropertyEnd, "Fixing Size Of Struct [ Dumper-7 ]"));
+			Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, StructSize - PrevPropertyEnd, std::format("0x{:04X} (0x{:04X}) FIX SIZE OF STRUCT", PrevPropertyEnd, StructSize - PrevPropertyEnd)));
 		}
 
 		return PrevPropertyEnd;
@@ -319,17 +319,17 @@ void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStr
 		const int Offset = Property.GetOffset();
 		const int Size = (!Property.IsA(EClassCastFlags::StructProperty) ? Property.GetSize() : Property.Cast<UEStructProperty>().GetUnderlayingStruct().GetStructSize()) * Property.GetArrayDim();
 
-		std::string Comment = std::format("0x{:X}(0x{:X})({})", Offset, Size, Property.StringifyFlags());
+		std::string Comment = std::format("0x{:04X} (0x{:04X}) {}", Offset, Size, Property.StringifyFlags());
 
 		if (Offset >= PrevPropertyEnd)
 		{
 			if (bLastPropertyWasBitField && PrevBoolPropertyBit != 9)
 			{
-				Struct.AddMember(GenerateBitPadding(Offset, 9 - PrevBoolPropertyBit, "Fixing Bit-Field Size  [ Dumper-7 ]"));
+				Struct.AddMember(GenerateBitPadding(Offset, 9 - PrevBoolPropertyBit, "FIX BIT_FIELD SIZE"));
 			}
 			if (Offset > PrevPropertyEnd)
 			{
-				Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, Offset - PrevPropertyEnd, "Fixing Size After Last Property  [ Dumper-7 ]"));
+				Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, Offset - PrevPropertyEnd, std::format("0x{:04X} (0x{:04X}) MISSED OFFSET (FIX SIZE AFTER LAST PROPERTY)", PrevPropertyEnd, Offset - PrevPropertyEnd)));
 			}
 		}
 
@@ -339,14 +339,14 @@ void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStr
 
 			const uint8 BitIndex = Property.Cast<UEBoolProperty>().GetBitIndex();
 
-			Comment = std::format("Mask: 0x{:X}, PropSize: 0x{:X}{}", Property.Cast<UEBoolProperty>().GetFieldMask(), Size, Comment);
+			Comment = std::format("0x{:04X} (0x{:04X}) (Mask: 0x{:04X}) {}", Offset, Size, Property.Cast<UEBoolProperty>().GetFieldMask(), Property.StringifyFlags());
 
 			if (PrevBoolPropertyEnd < Offset)
 				PrevBoolPropertyBit = 1;
 
 			if (PrevBoolPropertyBit < BitIndex)
 			{
-				Struct.AddMember(GenerateBitPadding(Offset, BitIndex - PrevBoolPropertyBit, "Fixing Bit-Field Size  [ Dumper-7 ]"));
+				Struct.AddMember(GenerateBitPadding(Offset, BitIndex - PrevBoolPropertyBit, "FIX BIT_FIELD SIZE"));
 			}
 
 			PrevBoolPropertyBit = BitIndex + 1;
@@ -376,7 +376,7 @@ void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStr
 
 	if (StructSize > PrevPropertyEnd)
 	{
-		Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, StructSize - PrevPropertyEnd, "Fixing Size Of Struct [ Dumper-7 ]"));
+		Struct.AddMember(GenerateBytePadding(PrevPropertyEnd, StructSize - PrevPropertyEnd, std::format("0x{:04X} (0x{:04X}) FIX SIZE OF STRUCT", PrevPropertyEnd, StructSize - PrevPropertyEnd)));
 	}
 }
 
@@ -439,14 +439,18 @@ Types::Function Package::GenerateFunction(UEFunction& Function, UEStruct& Super)
 	
 	Types::Function Func(ReturnType, FunctionName, Super.GetCppName(), Params);
 
-	Func.AddComment(Function.GetFullName());
-	Func.AddComment("(" + Function.StringifyFlags() + ")");
-	Func.AddComment("Parameters:");
+	Func.AddCommentEx("/**");
+	Func.AddCommentEx(" * Function:");
+	Func.AddCommentEx(" * 		Name   -> " + Function.GetFullName());
+	Func.AddCommentEx(" * 		Flags  -> (" + Function.StringifyFlags() + ")");
+	Func.AddCommentEx(" * Parameters:");
 
 	for (UEProperty Param : Function.GetProperties())
 	{
-		Func.AddComment(std::format("{:{}}{:{}}({})", Param.GetCppType(), 35, Param.GetValidName(), 65, Param.StringifyFlags()));
+		Func.AddCommentEx(std::format(" *  		{:{}}{:{}}({})", Param.GetCppType(), 35, Param.GetValidName(), 65, Param.StringifyFlags()));
 	}
+
+	Func.AddCommentEx(" */");
 
 	FuncBody += "\tstatic class UFunction* Func = nullptr;\n\n\tif (!Func)\n";
 
@@ -526,8 +530,10 @@ Types::Struct Package::GenerateStruct(UEStruct Struct, bool bIsFunction)
 		}
 	}
 
-	RetStruct.AddComment(std::format("0x{:X} (0x{:X} - 0x{:X})", Size - SuperSize, Size, SuperSize));
-	RetStruct.AddComment(Struct.GetFullName());
+	RetStruct.AddCommentEx("/**");
+	RetStruct.AddCommentEx(" * " + Struct.GetFullName());
+	RetStruct.AddCommentEx(std::format(" * Size -> 0x{:X} (FullSize[0x{:X}] - InheritedSize[0x{:X}])", Size - SuperSize, Size, SuperSize));
+	RetStruct.AddCommentEx(" */");
 
 	std::vector<UEProperty> Properties = Struct.GetProperties();
 
@@ -586,13 +592,18 @@ Types::Class Package::GenerateClass(UEClass Class)
 		}
 	}
 
-	RetClass.AddComment(std::format("0x{:X} (0x{:X} - 0x{:X})", Size - SuperSize, Size, SuperSize));
-	RetClass.AddComment(FullName);
+	RetClass.AddCommentEx("/**");
+	RetClass.AddCommentEx(" * " + FullName);
+	RetClass.AddCommentEx(std::format(" * Size -> 0x{:X} (FullSize[0x{:X}] - InheritedSize[0x{:X}])", Size - SuperSize, Size, SuperSize));
+	RetClass.AddCommentEx(" */");
 
 	Types::Function StaticClass("class UClass*", "StaticClass", ClassName, {}, true);
 
-	StaticClass.AddComment(FullName);
-	StaticClass.AddComment("(" + Class.StringifyCastFlags() + ")"); // Func.AddComment("(" + Function.StringifyFlags() + ")");
+	StaticClass.AddCommentEx("/**");
+	StaticClass.AddCommentEx(" * Function:");
+	StaticClass.AddCommentEx(" * 		Name   -> " + FullName + ".StaticClass");
+	StaticClass.AddCommentEx(" * 		Flags  -> (" + Class.StringifyCastFlags() + ")");
+	StaticClass.AddCommentEx(" */");
 
 	StaticClass.AddBody(
 		std::format(
@@ -605,8 +616,11 @@ R"(	static class UClass* Clss = nullptr;
 
 	Types::Function GetDefault("class " + ClassName + "*", "GetDefault", ClassName, {}, true, true);
 
-	GetDefault.AddComment(Class.GetDefaultObject().GetFullName());
-	GetDefault.AddComment("(" + Class.GetDefaultObject().StringifyObjFlags() + ")");
+	GetDefault.AddCommentEx("/**");
+	GetDefault.AddCommentEx(" * Function:");
+	GetDefault.AddCommentEx(" * 		Name   -> " + Class.GetDefaultObject().GetFullName());
+	GetDefault.AddCommentEx(" * 		Flags  -> (" + Class.GetDefaultObject().StringifyObjFlags() + ")");
+	GetDefault.AddCommentEx(" */");
 
 	GetDefault.AddBody(
 		std::format(

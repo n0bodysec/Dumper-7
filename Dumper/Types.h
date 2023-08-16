@@ -32,6 +32,7 @@ namespace Types
 		Enum(std::string Name, std::string Type);
 
 		void AddComment(std::string&& Comment);
+		void AddCommentEx(std::string&& Comment);
 		void AddMember(std::string&& Name, int64 Value);
 		void FixWindowsConstant(std::string&& ConstantName);
 
@@ -49,6 +50,7 @@ namespace Types
 		Member(std::string Type, std::string Name, std::string Comment = "");
 
 		void AddComment(std::string Comment);
+		void AddCommentEx(std::string Comment);
 
 		std::string GetGeneratedBody();
 	};
@@ -84,6 +86,7 @@ namespace Types
 		Struct(std::string Name, bool bIsClass = false, std::string Super = "");
 
 		void AddComment(std::string Comment);
+		void AddCommentEx(std::string Comment);
 		void AddMember(Member& NewMember);
 		void AddMember(Member&& NewMember);
 		void AddMembers(std::vector<Member>& NewMembers);
@@ -119,6 +122,8 @@ namespace Types
 
 		void AddComment(std::string& Comment);
 		void AddComment(std::string&& Comment);
+		void AddCommentEx(std::string& Comment);
+		void AddCommentEx(std::string&& Comment);
 	};
 
 	class Class : public Struct

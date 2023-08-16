@@ -44,10 +44,8 @@ struct FChunkedFixedUObjectArray
 
 		for (int i = 0; i < NumChunks; i++)
 		{
-#pragma warning(disable:6011)
 			const bool bIsCurrentIndexValidAbove = bAreObjectsAboveValid ? !IsBadReadPtr(ObjectsAboveButDecrypted[i]) : false;
 			const bool bIsCurrentIndexValidBelow = bAreObjectsBewlowValid ? !IsBadReadPtr(ObjectsBelowButDecrypted[i]) : false;
-#pragma pop
 
 			if (!bIsCurrentIndexValidAbove && !bIsCurrentIndexValidBelow)
 				return false;

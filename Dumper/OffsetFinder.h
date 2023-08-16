@@ -227,6 +227,8 @@ namespace OffsetFinder
 			if ((GuidChildName == "A" || GuidChildName == "D") && (VectorChildName == "X" || VectorChildName == "Z"))
 				return Off::FField::Name;
 		}
+
+		return NULL;
 	}
 
 	/* UEnum */

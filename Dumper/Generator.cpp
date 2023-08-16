@@ -316,7 +316,7 @@ void Generator::HandlePackageGeneration(const fs::path* const SDKFolder, int32 P
 		FileWriter ParameterFile(*SDKFolder, FileName, FileWriter::FileType::Parameter);
 
 		if (PackageName == "CoreUObject")
-			FunctionFile.Write("\t//Initialize GObjects using InitGObjects()\n\tTUObjectArray* UObject::GObjects = nullptr;\n\n");
+			FunctionFile.Write("\tTUObjectArray* UObject::GObjects = nullptr;\n\n");
 
 		for (auto& [ClassName, PackageFunctionsPairs] : Generator::PredefinedFunctions)
 		{
@@ -437,7 +437,11 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 	std::ofstream HeaderStream(SdkPath / "SDK.hpp");
 
 	HeaderStream << "#pragma once\n\n";
-	HeaderStream << "// Made with <3 by me [Encryqed] && you [Fischsalat] + him [TempAccountNull]\n\n";
+	HeaderStream << R"(
+// ---------------------------- \\
+//           Dumper-7           \\
+// ---------------------------- \\
+)";
 
 	HeaderStream << std::format("// {}\n", Settings::GameName);
 	HeaderStream << std::format("// {}\n\n", Settings::GameVersion);
@@ -462,14 +466,16 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 
 	HeaderStream << std::format(
 		R"(
-namespace Offsets
-{{
-	constexpr int32 GObjects          = 0x{:08X};
-	constexpr int32 AppendString      = 0x{:08X};
-	constexpr int32 GNames            = 0x{:08X};
-	constexpr int32 ProcessEvent      = 0x{:08X};
-}}
-)", Off::InSDK::GObjects, Off::InSDK::AppendNameToString, Off::InSDK::GNames, Off::InSDK::PEOffset);
+// SDK Configuration
+#define MODULE_NAME                 L"{}"
+#define PROCESSEVENT_INDEX          0x{:02X}
+#define CREATEDEFAULTOBJECT_INDEX   0x{:02X}
+#define PROCESSEVENT_OFFSET         0x{:08X}
+#define GOBJECTS_OFFSET             0x{:08X}
+#define GNAMES_OFFSET               0x{:08X}
+#define GWORLD_OFFSET               0x{:08X}
+#define APPENDSTRING_OFFSET         0x{:08X}
+)", "GAME_NAME.exe", Off::InSDK::PEIndex, NULL, Off::InSDK::PEOffset, Off::InSDK::GObjects, Off::InSDK::GNames, NULL, Off::InSDK::AppendNameToString);
 
 	if (Settings::bShouldXorStrings)
 		HeaderStream << "#define XORSTR(str) str\n";
@@ -542,10 +548,15 @@ void Generator::InitPredefinedMembers()
 	{
 		return (Settings::Internal::bUseFProperty ? 'F' : 'U') + std::move(Name);
 	};
+
+	// TODO: fix (not working?)
+	PredefinedMembers["UWorld"] = {
+		{ "static class UWorld**", "GWorld", 0x00, 0x00 },
+	};
 	
 	PredefinedMembers["UObject"] =
 	{
-		{ "static class TUObjectArray*", "GObjects", 0x00, 0x00},
+		{ "static class TUObjectArray*", "GObjects", 0x00, 0x00 },
 		{ "void*", "Vft", Off::UObject::Vft, 0x08 },
 		{ "int32 ", "Flags", Off::UObject::Flags, 0x04 },
 		{ "int32", "Index", Off::UObject::Index, 0x04 },
@@ -817,9 +828,9 @@ R"(
 				std::format(
 R"(
 	{{
-		return GetVFunction<void(*)(const UObject*, class UFunction*, void*)>(this, 0x{:X} /*0x{:X}*/)(this, Function, Parms);
+		return GetVFunction<void(*)(const UObject*, class UFunction*, void*)>(this, PROCESSEVENT_INDEX)(this, Function, Parms);
 	}}
-)", Off::InSDK::PEIndex, Off::InSDK::PEOffset)
+)")
 			}
 		}
 	};
@@ -849,7 +860,16 @@ R"(
 		return nullptr;
 	}
 )"
-			}
+			},
+			{
+				"\tclass UObject* CreateDefaultObject();",
+				"\tclass UObject* UClass::CreateDefaultObject()",
+R"(
+	{
+		return GetVFunction<UObject*(*)(UClass*)>(this, CREATEDEFAULTOBJECT_INDEX)(this);
+	}
+)"
+			},
 		}
 	};
 
@@ -1038,14 +1058,28 @@ void Generator::GenerateBasicFile(const fs::path& SdkPath)
 
 	BasicHeader.Write(
 		R"(
-void InitGObjects();
+bool InitSdk(const std::wstring& moduleName, uintptr_t gObjectsOffset, uintptr_t gNamesOffset, uintptr_t gWorldOffset);
+bool InitSdk();
 )");
 
 	BasicSource.Write(
 		R"(
-void InitGObjects()
+bool InitSdk(const std::wstring& moduleName, uintptr_t gObjectsOffset, uintptr_t gNamesOffset, uintptr_t gWorldOffset)
 {
-	UObject::GObjects = reinterpret_cast<TUObjectArray*>(uintptr_t(GetModuleHandle(0)) + Offsets::GObjects);
+	auto mBaseAddress = reinterpret_cast<uintptr_t>(GetModuleHandleW(moduleName.c_str()));
+	if (!mBaseAddress)
+		return false;
+
+	UObject::GObjects = reinterpret_cast<TUObjectArray*>(mBaseAddress + gObjectsOffset);
+	FName::GNames = reinterpret_cast<SDK::FNamePool*>(mBaseAddress + gNamesOffset);
+	UWorld::GWorld = reinterpret_cast<SDK::UWorld**>(mBaseAddress + gWorldOffset);
+
+	return true;
+}
+
+bool InitSdk()
+{
+	return InitSdk(MODULE_NAME, GOBJECTS_OFFSET, GNAMES_OFFSET, GWORLD_OFFSET);
 }		
 )");
 
@@ -1091,7 +1125,6 @@ public:
 	int32 NumElements;
 
 public:
-	// Call InitGObjects() before using these functions
 	inline int Num() const
 	{{
 		return NumElements;
@@ -1147,7 +1180,6 @@ public:
 	{}
 
 public:
-	// Call InitGObjects() before using these functions
 	inline int32 Num() const
 	{{
 		return NumElements;
@@ -1482,7 +1514,7 @@ public:
  R"(inline std::string GetRawString() const
 	{
 		static FString TempString(1024);
-		static auto AppendString = reinterpret_cast<void(*)(const FName*, FString&)>(uintptr_t(GetModuleHandle(0)) + Offsets::AppendString);
+		static auto AppendString = reinterpret_cast<void(*)(const FName*, FString&)>(uintptr_t(GetModuleHandle(0)) + APPENDSTRING_OFFSET);
 
 		AppendString(this, TempString);
 
@@ -1495,8 +1527,7 @@ public:
 	constexpr const char* GetRawStringWithNameArray =
  R"(inline std::string GetRawString() const
 	{
-		if (!GNames)
-			InitGNames();
+		// if (!GNames) InitGNames();
 
 		std::string RetStr = FName::GNames->GetEntryByIndex(GetDisplayIndex())->GetString();
 
@@ -1509,8 +1540,7 @@ public:
 	constexpr const char* GetRawStringWithNameArrayWithOutlineNumber =
  R"(inline std::string GetRawString() const
 	{
-		if (!GNames)
-			InitGNames();
+		// if (!GNames) InitGNames();
 
 		const FNameEntry* Entry = FName::GNames->GetEntryByIndex(GetDisplayIndex());
 
@@ -1541,11 +1571,6 @@ public:
 
 	// GetRawString - returns an unedited string as the engine uses it
 	{}
-
-	static inline void InitGNames()
-	{{
-		GNames = {}(uint64(GetModuleHandle(0)) + Offsets::GNames);
-	}}
 
 	// ToString - returns an edited string as it's used by most SDKs ["/Script/CoreUObject" -> "CoreUObject"]
 	inline std::string ToString() const
@@ -1654,11 +1679,40 @@ public:
 
 	BasicHeader.Write(
 		R"(
+class FTextData
+{
+public:
+	uint8 Pad[0x28];
+	wchar_t* Name;
+	int32 Length;
+};
+)");
+
+	// By mlodyskiny (see https://github.com/Encryqed/Dumper-7/pull/40)
+	BasicHeader.Write(
+		R"(
 class FText
 {
 public:
-	FString TextData;
-	uint8 IdkTheRest[0x8];
+	FTextData* Data;
+	char UnknownData[0x10];
+	wchar_t* Get() const 
+	{
+		if (Data) 
+		{
+			return Data->Name;
+		}
+		return nullptr;
+	}
+	std::string ToString()
+	{
+		if (Data)
+		{
+			std::wstring Temp(Data->Name);
+			return std::string(Temp.begin(), Temp.end());
+		}
+		return "";
+	}
 };
 )");
 

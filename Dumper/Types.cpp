@@ -25,6 +25,11 @@ void Types::Struct::AddComment(std::string Comment)
 	Comments += "// " + Comment + "\n";
 }
 
+void Types::Struct::AddCommentEx(std::string Comment)
+{
+	Comments += Comment + "\n";
+}
+
 void Types::Struct::AddMember(Member& NewMember)
 {
 	StructMembers.push_back(NewMember);
@@ -143,6 +148,11 @@ void Types::Member::AddComment(std::string Comment)
 	this->Comment = "// " + Comment;
 }
 
+void Types::Member::AddCommentEx(std::string Comment)
+{
+	this->Comment = Comment;
+}
+
 std::string Types::Member::GetGeneratedBody()
 {
 	return std::format("\t{:{}}{:{}} {}\n", Type, 45, Name + ";", 50, Comment);
@@ -214,6 +224,16 @@ void Types::Function::AddComment(std::string&& Comment)
 	Comments += std::format("// {}\n", Comment);
 }
 
+void Types::Function::AddCommentEx(std::string& Comment)
+{
+	Comments += std::format("{}\n", Comment);
+}
+
+void Types::Function::AddCommentEx(std::string&& Comment)
+{
+	Comments += std::format("{}\n", Comment);
+}
+
 std::string Types::Function::GetGeneratedBody()
 {
 	return std::format("\n{}\n{}\n{}\n\n", Comments, DeclarationCPP, Body);
@@ -254,6 +274,11 @@ Types::Enum::Enum(std::string Name, std::string Type)
 void Types::Enum::AddComment(std::string&& Comment)
 {
 	Declaration = std::format("// {}\n{}", std::move(Comment), Declaration);
+}
+
+void Types::Enum::AddCommentEx(std::string&& Comment)
+{
+	Declaration = std::format("{}\n{}", std::move(Comment), Declaration);
 }
 
 void Types::Enum::AddMember(std::string&& Name, int64 Value)

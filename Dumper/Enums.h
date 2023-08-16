@@ -260,7 +260,7 @@ enum class EClassCastFlags : uint64
 	LargeWorldCoordinatesRealProperty	= 0x0080000000000000,
 };
 
-enum class EClassFlags
+enum class EClassFlags : uint32
 {
 	CLASS_None					= 0x00000000u,
 	Abstract					= 0x00000001u,
