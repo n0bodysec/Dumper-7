@@ -975,7 +975,10 @@ R"(
 					continue;
 
 				if (Obj->IsA(UEngine::StaticClass()) && !Obj->IsDefaultObject())
+				{
 					GEngine = static_cast<UEngine*>(Obj);
+					break;
+				}
 			}
 		}
 
@@ -1591,18 +1594,20 @@ public:
 
 	inline bool operator==(const FName& Other) const
 	{{
-		return ComparisonIndex == Other.ComparisonIndex;
+		return ComparisonIndex == Other.ComparisonIndex{};
 	}}
 
 	inline bool operator!=(const FName& Other) const
 	{{
-		return ComparisonIndex != Other.ComparisonIndex;
+		return ComparisonIndex != Other.ComparisonIndex{};
 	}}
 }};
 )", Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseNamePool ? "FNamePool" : "TNameEntryArray" : "void"
   , FNameMemberStr
   , GetDisplayIndexString
-  , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString));
+  , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString
+  , " && Number == Other.Number")
+  , " || Number != Other.Number");
 
 	BasicHeader.Write(
 		R"(
