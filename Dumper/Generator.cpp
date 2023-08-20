@@ -1604,8 +1604,8 @@ public:
   , FNameMemberStr
   , GetDisplayIndexString
   , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString
-  , " && Number == Other.Number")
-  , " || Number != Other.Number");
+  , " && Number == Other.Number"
+  , " || Number != Other.Number"));
 
 	BasicHeader.Write(
 		R"(
