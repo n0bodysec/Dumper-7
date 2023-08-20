@@ -73,6 +73,7 @@ struct PackageDependencyManager
 
 class Package
 {
+private:
 	friend PackageDependencyManager;
 
 public:
@@ -81,6 +82,10 @@ public:
 	static PackageDependencyManager PackageSorterStructs; // "PackageName_Structs.h"
 	static PackageDependencyManager PackageSorterParams; // "PackageName_Params.h"
 
+private:
+	inline static UEObject EnginePackage = nullptr;
+
+private:
 	PackageDependencyManager StructSorter;
 	PackageDependencyManager ClassSorter;
 
@@ -96,6 +101,11 @@ public:
 	Package(UEObject _Object)
 		: PackageObject(_Object)
 	{
+		if constexpr (Settings::Debug::bGenerateAssertionFile && Settings::Debug::bLimitAssertionsToEngienPackage)
+		{
+			if (!EnginePackage)
+				EnginePackage = ObjectArray::FindObjectFast("Engine", EClassCastFlags::Package);
+		}
 	}
 
 	static void AddPackage(int32 Idx);

@@ -208,10 +208,6 @@ void FileWriter::SetFileHeader()
 {
 	FileStream << R"(#pragma once
 
-#ifdef _MSC_VER
-	#pragma pack(push, 0x01)
-#endif
-
 )";
 
 	if (CurrentFileType == FileType::Function || CurrentFileType == FileType::Parameter || CurrentFileType == FileType::Source)
@@ -233,9 +229,7 @@ void FileWriter::SetFileEnding()
 		FileStream << "}\n";
 
 	FileStream << R"(
-#ifdef _MSC_VER
-	#pragma pack(pop)
-#endif
+
 )";
 }
 
