@@ -479,7 +479,7 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 )", "GAME_NAME.exe", Off::InSDK::PEIndex, NULL, Off::InSDK::PEOffset, Off::InSDK::GObjects, Off::InSDK::GNames, NULL, Off::InSDK::AppendNameToString);
 
 	if (Settings::bShouldXorStrings)
-		HeaderStream << "#define XORSTR(str) str\n";
+		HeaderStream << std::format("#define {}(str) str\n", Settings::XORString);
 
 	HeaderStream << "\n#include \"PropertyFixup.h\"\n";
 	HeaderStream << "\n#include \"SDK/" << (Settings::FilePrefix ? Settings::FilePrefix : "") << "Basic.h\"\n";
@@ -1842,28 +1842,30 @@ public:
 	}
 };
 )");
+	BasicHeader.Write("namespace SoftObjPathWrapper\n{\n");
+
+	UEStruct SoftObjectPath = ObjectArray::FindObjectFast<UEStruct>("SoftObjectPath", EClassCastFlags::Struct);
+	if (UEStructProperty AssetPath = SoftObjectPath.FindMember("AssetPath", EClassCastFlags::StructProperty).Cast<UEStructProperty>())
+	{
+		Types::Struct AssetPathStruct = Package::StaticGenerateStruct(AssetPath.GetUnderlayingStruct());
+		BasicHeader.WriteStruct(AssetPathStruct);
+	}
+
+	Types::Struct SoftObjectPathStruct = Package::StaticGenerateStruct(SoftObjectPath);
+	BasicHeader.WriteStruct(SoftObjectPathStruct);
+
+	BasicHeader.Write("}\n");
 
 	BasicHeader.Write(
 		R"(
-class FSoftObjectPath_
+class FSoftObjectPtr : public TPersistentObjectPtr<SoftObjPathWrapper::FSoftObjectPath>
 {
 public:
-	FName AssetPathName;
-	FString SubPathString;
-};
-)");
-
-	BasicHeader.Write(
-		R"(
-class alignas(8) FSoftObjectPtr : public TPersistentObjectPtr<FSoftObjectPath_>
-{
-public:
-
-	FName GetAssetPathName();
 	FString GetSubPathString();
-
-	std::string GetAssetPathNameStr();
 	std::string GetSubPathStringStr();
+
+	template<class SoftObjectPath = FSoftObjectPath>
+	SoftObjectPath& GetObjectPath();
 };
 )");
 
@@ -1908,23 +1910,26 @@ public:
 
 	BasicSource.Write(
 		R"(
-FName FSoftObjectPtr::GetAssetPathName()
-{
-	return ObjectID.AssetPathName;
-}
 FString FSoftObjectPtr::GetSubPathString()
 {
 	return ObjectID.SubPathString;
 }
 
-std::string FSoftObjectPtr::GetAssetPathNameStr()
-{
-	return ObjectID.AssetPathName.ToString();
-}
 std::string FSoftObjectPtr::GetSubPathStringStr()
 {
 	return ObjectID.SubPathString.ToString();
 }
+
+template<class SoftObjectPath>
+SoftObjectPath& FSoftObjectPtr::GetObjectPath()
+{
+	static_assert(std::is_same_v<SoftObjectPath, FSoftObjectPath>, "Only use this with FSoftObjectPath. This function is only templated as a workaround to C++ type-checks.");
+
+	return reinterpret_cast<FSoftObjectPath&>(ObjectID);
+}
+
+void Dummy() { FSoftObjectPtr().GetObjectPath(); }
+
 )");
 
 
@@ -2037,7 +2042,7 @@ inline bool operator&(EClassCastFlags Left, EClassCastFlags Right)
 	BasicHeader.Write(
 		R"(
 
-enum EClassFlags
+enum class EClassFlags : int32
 {
 	CLASS_None					= 0x00000000u,
 	Abstract					= 0x00000001u,

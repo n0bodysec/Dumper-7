@@ -286,7 +286,7 @@ void Package::Process(const std::vector<int32_t>& PackageMembers)
 	}
 }
 
-void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStruct& Super, Types::Struct& Struct, int32 StructSize, int32 SuperSize)
+void Package::StaticGenerateMembers(const std::vector<UEProperty>& MemberVector, UEStruct& Super, Types::Struct& Struct, int32 StructSize, int32 SuperSize)
 {
 	const bool bIsSuperFunction = Super.IsA(EClassCastFlags::Function);
 
@@ -306,7 +306,7 @@ void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStr
 	{
 		if constexpr (!Settings::Debug::bLimitAssertionsToEngienPackage)
 		{
-			if (PackageObject == EnginePackage)
+			if (Super.GetOutermost() == EnginePackage)
 			{
 				if (!Super.IsA(EClassCastFlags::Function) && !MemberVector.empty())
 				{
@@ -376,7 +376,7 @@ void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStr
 			bool bWriteAssertion = true;
 
 			if constexpr (Settings::Debug::bLimitAssertionsToEngienPackage)
-				bWriteAssertion = PackageObject == EnginePackage;
+				bWriteAssertion = Super.GetOutermost() == EnginePackage;
 
 			if (bWriteAssertion)
 			{
@@ -399,7 +399,7 @@ void Package::GenerateMembers(const std::vector<UEProperty>& MemberVector, UEStr
 	}
 }
 
-Types::Function Package::GenerateFunction(UEFunction& Function, UEStruct& Super)
+Types::Function Package::StaticGenerateFunction(UEFunction& Function, UEStruct& Super)
 {
 	static int NumUnnamedFunctions = 0;
 
@@ -508,14 +508,12 @@ Types::Function Package::GenerateFunction(UEFunction& Function, UEStruct& Super)
 		FuncBody += "\n\treturn Parms.ReturnValue;\n";
 
 	Func.AddBody(FuncBody);
-	Func.SetParamStruct(GenerateStruct(Function, true));
-
-	AllFunctions.push_back(Func);
+	Func.SetParamStruct(StaticGenerateStruct(Function, true));
 
 	return Func;
 }
 
-Types::Struct Package::GenerateStruct(UEStruct Struct, bool bIsFunction)
+Types::Struct Package::StaticGenerateStruct(UEStruct Struct, bool bIsFunction)
 {
 	std::string StructName = !bIsFunction ? Struct.GetCppName() : Struct.Cast<UEFunction>().GetParamStructName();
 
@@ -568,15 +566,12 @@ Types::Struct Package::GenerateStruct(UEStruct Struct, bool bIsFunction)
 			return Left.GetOffset() < Right.GetOffset();
 		});
 
-	GenerateMembers(Properties, Struct, RetStruct, Size, SuperSize);
-
-	if (!bIsFunction)
-		AllStructs.push_back(RetStruct);
+	StaticGenerateMembers(Properties, Struct, RetStruct, Size, SuperSize);
 
 	return RetStruct;
 }
 
-Types::Class Package::GenerateClass(UEClass Class)
+Types::Class Package::StaticGenerateClass(UEClass Class, std::vector<Types::Function>& PackageFunctions)
 {
 	std::string ClassName = Class.GetCppName();
 	std::string RawName = Class.GetName();
@@ -608,22 +603,24 @@ Types::Class Package::GenerateClass(UEClass Class)
 	RetClass.AddCommentEx(std::format(" * Size -> 0x{:04X} (FullSize[0x{:04X}] - InheritedSize[0x{:04X}])", Size - SuperSize, Size, SuperSize));
 	RetClass.AddCommentEx(" */");
 
-	Types::Function StaticClass("class UClass*", "StaticClass", ClassName, {}, true);
+		
+	Types::Function StaticClass("class UClass*", "StaticClass", Class.GetCppName(), {}, true);
 
 	StaticClass.AddCommentEx("/**");
 	StaticClass.AddCommentEx(" * Function:");
-	StaticClass.AddCommentEx(" * 		Name   -> " + FullName + ".StaticClass");
+	StaticClass.AddCommentEx(" * 		Name   -> " + Class.GetFullName() + ".StaticClass");
 	StaticClass.AddCommentEx(" * 		Flags  -> (" + Class.StringifyCastFlags() + ")");
 	StaticClass.AddCommentEx(" */");
 
 	StaticClass.AddBody(
 		std::format(
-R"(	static class UClass* Clss = nullptr;
+			R"(	static class UClass* Clss = nullptr;
 
 	if (!Clss)
 		Clss = UObject::FindClassFast({});
 
 	return Clss;)", Settings::bShouldXorStrings ? std::format("{}(\"{}\")", Settings::XORString, RawName) : std::format("\"{}\"", RawName)));
+
 
 	Types::Function GetDefault("class " + ClassName + "*", "GetDefault", ClassName, {}, true, true);
 
@@ -635,7 +632,7 @@ R"(	static class UClass* Clss = nullptr;
 
 	GetDefault.AddBody(
 		std::format(
-	 R"(	static {0}* Default = nullptr;
+			R"(	static class {0}* Default = nullptr;
 
 	if (!Default)
 		Default = static_cast<{0}*>({0}::StaticClass()->DefaultObject);
@@ -644,14 +641,17 @@ R"(	static class UClass* Clss = nullptr;
 
 	RetClass.AddFunction(StaticClass);
 	RetClass.AddFunction(GetDefault);
-	AllFunctions.push_back(StaticClass);
-	AllFunctions.push_back(GetDefault);
-	
+	PackageFunctions.push_back(StaticClass);
+	PackageFunctions.push_back(GetDefault);
+
 	for (UEField Child = Class.GetChild(); Child; Child = Child.GetNext())
 	{
 		if (Child.IsA(EClassCastFlags::Function))
 		{
-			RetClass.AddFunction(GenerateFunction(Child.Cast<UEFunction&>(), Class));
+			Types::Function Func = StaticGenerateFunction(Child.Cast<UEFunction&>(), Class);
+
+			RetClass.AddFunction(Func);
+			PackageFunctions.push_back(Func);
 		}
 	}
 
@@ -671,14 +671,12 @@ R"(	static class UClass* Clss = nullptr;
 		});
 
 	UEObject PackageObj = Class.GetOutermost();
-	GenerateMembers(Properties, Class, RetClass, Size, SuperSize);
-
-	AllClasses.push_back(RetClass);
+	StaticGenerateMembers(Properties, Class, RetClass, Size, SuperSize);
 
 	return RetClass;
 }
 
-Types::Enum Package::GenerateEnum(UEEnum Enum)
+Types::Enum Package::StaticGenerateEnum(UEEnum Enum)
 {
 	std::string EnumName = Enum.GetEnumTypeAsStr();
 
@@ -702,7 +700,29 @@ Types::Enum Package::GenerateEnum(UEEnum Enum)
 	if (EnumName.find("ERaMaterialName") != -1)
 		Enm.FixWindowsConstant("TRANSPARENT");
 
-	AllEnums.push_back(Enm);
-
 	return Enm;
+}
+
+void Package::GenerateFunction(UEFunction& Function, UEStruct& Super)
+{
+	AllFunctions.push_back(StaticGenerateFunction(Function, Super));
+}
+
+void Package::GenerateStruct(UEStruct Struct, bool bIsFunction)
+{
+	AllStructs.push_back(StaticGenerateStruct(Struct, bIsFunction));
+}
+
+void Package::GenerateClass(UEClass Class)
+{
+	Types::Class RetClass = StaticGenerateClass(Class, AllFunctions);
+
+	
+
+	AllClasses.push_back(RetClass);
+}
+
+void Package::GenerateEnum(UEEnum Enum)
+{
+	AllEnums.push_back(StaticGenerateEnum(Enum));
 }
