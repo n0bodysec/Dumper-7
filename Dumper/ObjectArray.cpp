@@ -171,9 +171,6 @@ void ObjectArray::InitializeChunkSize(uint8_t* ChunksPtr)
 /* We don't speak about this function... */
 void ObjectArray::Init(bool bScanAllMemory)
 {
-	if (!bScanAllMemory)
-		std::cout << "\nDumper-7 by me, you & him\n\n\n";
-
 	uintptr_t ImageBase = GetImageBase();
 	PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)(ImageBase);
 	PIMAGE_NT_HEADERS NtHeader = (PIMAGE_NT_HEADERS)(ImageBase + DosHeader->e_lfanew);

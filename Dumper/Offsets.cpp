@@ -6,7 +6,7 @@
 
 void Off::InSDK::InitPE()
 {
-	void** VfTable = *(void***)ObjectArray::GetByIndex(0).GetAddress();
+	void** Vft = *(void***)ObjectArray::GetByIndex(0).GetAddress();
 
 	auto Resolve32BitRelativeJump = [](void* FunctionPtr) -> uint8_t*
 	{
@@ -24,14 +24,14 @@ void Off::InSDK::InitPE()
 
 	for (int i = 0; i < 0x150; i++)
 	{
-		if (!VfTable[i] || !IsInProcessRange(reinterpret_cast<uintptr_t>(VfTable[i])))
+		if (!Vft[i] || !IsInProcessRange(reinterpret_cast<uintptr_t>(Vft[i])))
 			break;
 
-		if (FindPatternInRange({ 0xF7, -0x1, Off::UFunction::FunctionFlags, 0x0, 0x0, 0x0, 0x0, 0x04, 0x0, 0x0 }, Resolve32BitRelativeJump(VfTable[i]), 0x400)
-		&&  FindPatternInRange({ 0xF7, -0x1, Off::UFunction::FunctionFlags, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0 }, Resolve32BitRelativeJump(VfTable[i]), 0x400))
+		if (FindPatternInRange({ 0xF7, -0x1, Off::UFunction::FunctionFlags, 0x0, 0x0, 0x0, 0x0, 0x04, 0x0, 0x0 }, Resolve32BitRelativeJump(Vft[i]), 0x400)
+		&&  FindPatternInRange({ 0xF7, -0x1, Off::UFunction::FunctionFlags, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0 }, Resolve32BitRelativeJump(Vft[i]), 0x400))
 		{
 			Off::InSDK::PEIndex = i;
-			Off::InSDK::PEOffset = GetOffset(VfTable[i]);
+			Off::InSDK::PEOffset = GetOffset(Vft[i]);
 
 			std::cout << "PE-Offset: 0x" << std::hex << Off::InSDK::PEOffset << "\n";
 			std::cout << "PE-Index: 0x" << std::hex << i << "\n\n";
@@ -46,7 +46,7 @@ void Off::InSDK::InitPE()
 		if (!PeAddr)
 			break;
 
-		if (Resolve32BitRelativeJump(VfTable[i]) == PeAddr)
+		if (Resolve32BitRelativeJump(Vft[i]) == PeAddr)
 		{
 			Off::InSDK::PEIndex = i;
 			Off::InSDK::PEOffset = GetOffset(PeAddr);
@@ -64,13 +64,13 @@ void Off::InSDK::InitPE(int32 Index)
 {
 	Off::InSDK::PEIndex = Index;
 
-	void** VfTable = *reinterpret_cast<void***>(ObjectArray::GetByIndex(0).GetAddress());
+	void** Vft = *reinterpret_cast<void***>(ObjectArray::GetByIndex(0).GetAddress());
 
 	uintptr_t Imagebase = GetImageBase();
 
-	Off::InSDK::PEOffset = uintptr_t(VfTable[Off::InSDK::PEIndex]) - Imagebase;
+	Off::InSDK::PEOffset = uintptr_t(Vft[Off::InSDK::PEIndex]) - Imagebase;
 
-	std::cout << "VfTable-Offset: 0x" << std::hex << uintptr_t(VfTable) - Imagebase << std::endl;
+	std::cout << "VfTable-Offset: 0x" << std::hex << uintptr_t(Vft) - Imagebase << std::endl;
 }
 
 void Off::Init()

@@ -636,7 +636,7 @@ void Generator::InitPredefinedMembers()
 	PredefinedMembers["UObject"] =
 	{
 		{ "static class TUObjectArray*", "GObjects", 0x00, 0x00 },
-		{ "void*", "VfTable", Off::UObject::VfTable, 0x08 },
+		{ "void*", "VfTable", Off::UObject::Vft, 0x08 },
 		{ "int32 ", "Flags", Off::UObject::Flags, 0x04 },
 		{ "int32", "InternalIndex", Off::UObject::Index, 0x04 },
 		{ "class UClass*", "Class", Off::UObject::Class, 0x08 },
@@ -762,7 +762,7 @@ void Generator::InitPredefinedMembers()
 
 	PredefinedMembers["FField"] =
 	{
-		{ "void*", "VfTable", Off::FField::VfTable, 0x8 },
+		{ "void*", "VfTable", Off::FField::Vft, 0x8 },
 		{ "FFieldClass*", "Class", Off::FField::Class, 0x8 },
 		{ "FFieldVariant", "Owner", Off::FField::Owner, FFieldVariantSize },
 		{ "FField*", "Next", Off::FField::Next, 0x8 },
