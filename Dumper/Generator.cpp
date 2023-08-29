@@ -827,9 +827,9 @@ R"(
 			{
 				"\tinline void ProcessEvent(class UFunction* Function, void* Parms) const", "",
 R"(
-	{{
+	{
 		return GetVFunction<void(*)(const UObject*, class UFunction*, void*)>(this, PROCESSEVENT_INDEX)(this, Function, Parms);
-	}}
+	}
 )"
 			}
 		}
@@ -1518,8 +1518,11 @@ public:
 	constexpr const char* GetRawStringWithAppendString =
  R"(inline std::string GetRawString() const
 	{
-		static FString TempString(1024);
-		static auto AppendString = reinterpret_cast<void(*)(const FName*, FString&)>(uintptr_t(GetModuleHandle(0)) + APPENDSTRING_OFFSET);
+		thread_local FString TempString(1024);
+		static void(*AppendString)(const FName*, FString&) = nullptr;
+
+		if (!AppendString)
+			AppendString = reinterpret_cast<void(*)(const FName*, FString&)>(uintptr_t(GetModuleHandle(0)) + APPENDSTRING_OFFSET);
 
 		AppendString(this, TempString);
 
