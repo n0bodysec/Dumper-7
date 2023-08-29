@@ -24,14 +24,14 @@ void Off::InSDK::InitPE()
 
 	for (int i = 0; i < 0x150; i++)
 	{
-		if (!VfTable[i] ||IsBadReadPtr(VfTable[i]))
+		if (!VfTable[i] || !IsInProcessRange(reinterpret_cast<uintptr_t>(VfTable[i])))
 			break;
 
 		if (FindPatternInRange({ 0xF7, -0x1, Off::UFunction::FunctionFlags, 0x0, 0x0, 0x0, 0x0, 0x04, 0x0, 0x0 }, Resolve32BitRelativeJump(VfTable[i]), 0x400)
 		&&  FindPatternInRange({ 0xF7, -0x1, Off::UFunction::FunctionFlags, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0 }, Resolve32BitRelativeJump(VfTable[i]), 0x400))
 		{
 			Off::InSDK::PEIndex = i;
-			Off::InSDK::PEOffset = uintptr_t(VfTable[i]) - GetImageBase();
+			Off::InSDK::PEOffset = GetOffset(VfTable[i]);
 
 			std::cout << "PE-Offset: 0x" << std::hex << Off::InSDK::PEOffset << "\n";
 			std::cout << "PE-Index: 0x" << std::hex << i << "\n\n";
@@ -49,7 +49,7 @@ void Off::InSDK::InitPE()
 		if (Resolve32BitRelativeJump(VfTable[i]) == PeAddr)
 		{
 			Off::InSDK::PEIndex = i;
-			Off::InSDK::PEOffset = uintptr_t(PeAddr) - GetImageBase();
+			Off::InSDK::PEOffset = GetOffset(PeAddr);
 
 			std::cout << "PE-Offset: 0x" << std::hex << Off::InSDK::PEOffset << "\n";
 			std::cout << "PE-Index: 0x" << std::hex << i << "\n\n";
@@ -120,6 +120,9 @@ void Off::Init()
 
 	Off::UFunction::FunctionFlags = OffsetFinder::FindFunctionFlagsOffset();
 	std::cout << "Off::UFunction::FunctionFlags: " << Off::UFunction::FunctionFlags << "\n\n";
+
+	Off::UFunction::ExecFunction = OffsetFinder::FindFunctionNativeFuncOffset();
+	std::cout << "Off::UFunction::ExecFunction: " << Off::UFunction::ExecFunction << "\n\n";
 
 	Off::UProperty::ElementSize = OffsetFinder::FindElementSizeOffset();
 	std::cout << "Off::UProperty::ElementSize: " << Off::UProperty::ElementSize << "\n";
