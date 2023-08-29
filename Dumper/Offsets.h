@@ -45,7 +45,7 @@ namespace Off
 	namespace FField
 	{
 		// Fixed for CasePreserving FNames by OffsetFinder::FixupHardcodedOffsets();
-		inline int32 Vft = 0x00;
+		inline int32 VfTable = 0x00;
 		inline int32 Class = 0x08;
 		inline int32 Owner = 0x10;
 		inline int32 Next = 0x20;
@@ -90,7 +90,7 @@ namespace Off
 
 	namespace UObject
 	{
-		inline int32 Vft;
+		inline int32 VfTable;
 		inline int32 Flags;
 		inline int32 Index;
 		inline int32 Class;

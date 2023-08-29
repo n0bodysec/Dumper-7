@@ -348,9 +348,9 @@ bool UEObject::operator!=(const UEObject& Other) const
 
 void UEObject::ProcessEvent(UEFunction Func, void* Params)
 {
-	void** VFT = *reinterpret_cast<void***>(GetAddress());
+	void** VfTable = *reinterpret_cast<void***>(GetAddress());
 
-	void(*Prd)(void*, void*, void*) = decltype(Prd)(VFT[Off::InSDK::PEIndex]);
+	void(*Prd)(void*, void*, void*) = decltype(Prd)(VfTable[Off::InSDK::PEIndex]);
 
 	Prd(Object, Func.GetAddress(), Params);
 }

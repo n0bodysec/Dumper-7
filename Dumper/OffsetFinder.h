@@ -30,7 +30,7 @@ namespace OffsetFinder
 		return HighestFoundOffset;
 	}
 
-	template<bool bCheckForVft = true>
+	template<bool bCheckForVfTable = true>
 	inline int32_t GetValidPointerOffset(uint8_t* ObjA, uint8_t* ObjB, int32_t StartingOffset, int32_t MaxOffset)
 	{
 		if (IsBadReadPtr(ObjA) || IsBadReadPtr(ObjB))
@@ -38,8 +38,8 @@ namespace OffsetFinder
 
 		for (int j = StartingOffset; j <= MaxOffset; j += 0x8)
 		{
-			const bool bIsAValid = !IsBadReadPtr(*reinterpret_cast<void**>(ObjA + j)) && (bCheckForVft ? !IsBadReadPtr(**reinterpret_cast<void***>(ObjA + j)) : true);
-			const bool bIsBValid = !IsBadReadPtr(*reinterpret_cast<void**>(ObjB + j)) && (bCheckForVft ? !IsBadReadPtr(**reinterpret_cast<void***>(ObjB + j)) : true);
+			const bool bIsAValid = !IsBadReadPtr(*reinterpret_cast<void**>(ObjA + j)) && (bCheckForVfTable ? !IsBadReadPtr(**reinterpret_cast<void***>(ObjA + j)) : true);
+			const bool bIsBValid = !IsBadReadPtr(*reinterpret_cast<void**>(ObjB + j)) && (bCheckForVfTable ? !IsBadReadPtr(**reinterpret_cast<void***>(ObjB + j)) : true);
 
 			if (bIsAValid && bIsBValid)
 				return j;
@@ -64,7 +64,7 @@ namespace OffsetFinder
 			return FindOffset<4>(Infos, 0x0);
 		};
 
-		Off::UObject::Vft = 0x00;
+		Off::UObject::VfTable = 0x00;
 		Off::UObject::Flags = sizeof(void*);
 		Off::UObject::Index = GetIndexOffset();
 		Off::UObject::Class = GetValidPointerOffset(ObjA, ObjB, Off::UObject::Index + sizeof(int), 0x40);
