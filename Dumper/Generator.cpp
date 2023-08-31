@@ -2009,14 +2009,13 @@ public:
 };
 )");
 
-	// By mlodyskiny (see https://github.com/Encryqed/Dumper-7/pull/40)
 	BasicHeader.Write(
 		R"(
 class FText
 {
 public:
 	FTextData* Data;
-	char UnknownData[0x10];
+	uint8 Pad[0x10];
 
 	wchar_t* Get() const 
 	{
