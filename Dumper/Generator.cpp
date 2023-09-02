@@ -323,6 +323,11 @@ void Generator::GenerateIDAMappings()
 	{
 		if (Obj.HasAnyFlags(EObjectFlags::ClassDefaultObject))
 		{
+			UEClass Super = Obj.GetClass().GetSuper().Cast<UEClass>();
+
+			if (Super && Obj.GetVft() == Super.GetDefaultObject().GetVft())
+				continue;
+			
 			std::string Name = Obj.GetClass().GetCppName() + "_VFT";
 
 			uint32 Offset = static_cast<uint32>(GetOffset(Obj.GetVft()));
@@ -2461,7 +2466,6 @@ public:
 		{ "FSetProperty", "FProperty" },
 		{ "FEnumProperty", "FProperty" }
 	}};
-	// bool Package::GeneratePredefinedMembers(const std::string& SuperName, Types::Struct& Struct, int32 StructSize, int32 SuperSize)
 
 	ClassSizePairs.reserve(FPropertyClassSuperPairs.size());
 	for (auto& [ClassName, SuperName] : FPropertyClassSuperPairs)
