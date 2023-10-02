@@ -563,7 +563,7 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 #define APPENDSTRING_OFFSET         0x{:08X}
 )", "GAME_NAME.exe", Off::InSDK::PEIndex, NULL, Off::InSDK::PEOffset, Off::InSDK::GObjects, Off::InSDK::GNames, NULL, Off::InSDK::AppendNameToString);
 
-	if (Settings::bShouldXorStrings)
+	if (Settings::XORString)
 		HeaderStream << std::format("#define {}(str) str\n", Settings::XORString);
 
 	HeaderStream << "\n#include \"PropertyFixup.h\"\n";
@@ -609,6 +609,30 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 		Package::PackageSorterParams.GetIncludesForPackage(Pack.first, EIncludeFileType::Params, IncludesString, Settings::bIncludeOnlyRelevantPackages);
 	
 		HeaderStream << IncludesString;
+	}
+
+	if constexpr (Settings::Debug::bGenerateAssertionsForPredefinedMembers)
+	{
+		HeaderStream << "\n\n";
+
+		for (auto& Predef : Generator::PredefinedMembers)
+		{
+			HeaderStream << "\n";
+
+			for (auto& Member : Predef.second)
+			{
+				if (Member.Size == 0)
+					continue;
+
+				std::string Name = Member.Name;
+
+				const int ArrayInfo = Member.Name.find_first_of("[");
+				if (ArrayInfo != -1)
+					Name = Member.Name.substr(0, ArrayInfo);
+
+				HeaderStream << std::format("static_assert(offsetof({3}::{0}, {1}) == 0x{2:X}, \"{0}::{1} has a wrong offset!\");\n", Predef.first, Name, Member.Offset, Settings::SDKNamespaceName ? Settings::SDKNamespaceName : "");
+			}
+		}
 	}
 
 	HeaderStream.close();
@@ -706,7 +730,7 @@ void Generator::InitPredefinedMembers()
 		{ "uint8", "FieldMask", Off::UBoolProperty::Base + 0x3, 0x01 }
 	};
 
-	PredefinedMembers[PrefixPropertyName("ObjectProperty")] =
+	PredefinedMembers[PrefixPropertyName("ObjectPropertyBase")] =
 	{
 		{ "class UClass*", "PropertyClass", Off::UObjectProperty::PropertyClass, 0x08 }
 	};
@@ -767,6 +791,10 @@ void Generator::InitPredefinedMembers()
 		{ "union { class FField* Field; class UObject* Object; }", "Container", 0x0, 0x8 },
 		{ UObjectIdentifierType, UObjectIdentifierName, Settings::Internal::bUseMaskForFieldOwner ? 0x0 : 0x8, !Settings::Internal::bUseMaskForFieldOwner }
 	};
+
+	if (!Settings::Internal::bUseMaskForFieldOwner)
+		PredefinedMembers["FFieldVariant"].insert({ "uint8", "Pad[0x7]", 0x9, 0x7 });
+
 
 	PredefinedMembers["FField"] =
 	{
@@ -1121,17 +1149,20 @@ R"(
 { "\tFVector operator+(const FVector& Other) const;", "\tFVector FVector::operator+(const FVector& Other) const", R"(
 	{
 		return { X + Other.X, Y + Other.Y, Z + Other.Z };
-	})"
+	}
+)"
 			},
 { "\tFVector operator-(const FVector& Other) const;", "\tFVector FVector::operator-(const FVector& Other) const", R"(
 	{
 		return { X - Other.X, Y - Other.Y, Z - Other.Z };
-	})"
+	}
+)"
 			},
 { "\tFVector operator*(decltype(X) Scalar) const;", "\tFVector FVector::operator*(decltype(X) Scalar) const", R"(
 	{
 		return { X * Scalar, Y * Scalar, Z * Scalar };
-	})"
+	}
+)"
 			},
 { "\tFVector operator/(decltype(X) Scalar) const;", "\tFVector FVector::operator/(decltype(X) Scalar) const", R"(
 	{
@@ -1139,7 +1170,244 @@ R"(
 			return FVector();
 
 		return { X / Scalar, Y / Scalar, Z / Scalar };
+	}
+)"
+			}
+		}
+	};
+
+	PredefinedFunctions["FVector4"] =
+	{
+		"CoreUObject",
+		{
+{ "\tinline FVector4()", "", R"(
+		: X(0.0), Y(0.0), Z(0.0), W(0.0)
+	{
 	})"
+			},
+{ "\tinline FVector4(decltype(X) Value)", "", R"(
+		: X(Value), Y(Value), Z(Value), W(Value)
+	{
+	})"
+			},
+{ "\tinline FVector4(decltype(X) x, decltype(Y) y, decltype(Z) z, decltype(W) w)", "", R"(
+		: X(x), Y(y), Z(z), W(w)
+	{
+	})"
+			},
+{ "\tinline bool operator==(const FVector4& Other) const", "", R"(
+	{
+		return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W;
+	})"
+			},
+{ "\tinline bool operator!=(const FVector4& Other) const", "", R"(
+	{
+		return X != Other.X || Y != Other.Y || Z != Other.Z || W != Other.W;
+	})"
+			},
+{ "\tFVector4 operator+(const FVector4& Other) const;", "\tFVector4 FVector4::operator+(const FVector4& Other) const", R"(
+	{
+		return { X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W };
+	}
+)"
+			},
+{ "\tFVector4 operator-(const FVector4& Other) const;", "\tFVector4 FVector4::operator-(const FVector4& Other) const", R"(
+	{
+		return { X - Other.X, Y - Other.Y, Z - Other.Z, W - Other.W };
+	}
+)"
+			},
+{ "\tFVector4 operator*(decltype(X) Scalar) const;", "\tFVector4 FVector4::operator*(decltype(X) Scalar) const", R"(
+	{
+		return { X * Scalar, Y * Scalar, Z * Scalar, W * Scalar };
+	}
+)"
+			},
+{ "\tFVector4 operator/(decltype(X) Scalar) const;", "\tFVector4 FVector4::operator/(decltype(X) Scalar) const", R"(
+	{
+		if (Scalar == 0.0f)
+			return FVector4();
+
+		return { X / Scalar, Y / Scalar, Z / Scalar, W / Scalar };
+	}
+)"
+			}
+		}
+	};
+
+	PredefinedFunctions["FVector2D"] =
+	{
+		"CoreUObject",
+		{
+{ "\tinline FVector2D()", "", R"(
+		: X(0.0), Y(0.0)
+	{
+	})"
+			},
+{ "\tinline FVector2D(decltype(X) Value)", "", R"(
+		: X(Value), Y(Value)
+	{
+	})"
+			},
+{ "\tinline FVector2D(decltype(X) x, decltype(Y) y)", "", R"(
+		: X(x), Y(y)
+	{
+	})"
+			},
+{ "\tinline bool operator==(const FVector2D& Other) const", "", R"(
+	{
+		return X == Other.X && Y == Other.Y;
+	})"
+			},
+{ "\tinline bool operator!=(const FVector2D& Other) const", "", R"(
+	{
+		return X != Other.X || Y != Other.Y;
+	})"
+			},
+{ "\tFVector2D operator+(const FVector2D& Other) const;", "\tFVector2D FVector2D::operator+(const FVector2D& Other) const", R"(
+	{
+		return { X + Other.X, Y + Other.Y };
+	}
+)"
+			},
+{ "\tFVector2D operator-(const FVector2D& Other) const;", "\tFVector2D FVector2D::operator-(const FVector2D& Other) const", R"(
+	{
+		return { X - Other.X, Y - Other.Y };
+	}
+)"
+			},
+{ "\tFVector2D operator*(decltype(X) Scalar) const;", "\tFVector2D FVector2D::operator*(decltype(X) Scalar) const", R"(
+	{
+		return { X * Scalar, Y * Scalar };
+	}
+)"
+			},
+{ "\tFVector2D operator/(decltype(X) Scalar) const;", "\tFVector2D FVector2D::operator/(decltype(X) Scalar) const", R"(
+	{
+		if (Scalar == 0.0f)
+			return FVector2D();
+
+		return { X / Scalar, Y / Scalar };
+	}
+)"
+			}
+		}
+	};
+
+	PredefinedFunctions["FRotator"] =
+	{
+		"CoreUObject",
+		{
+{ "\tinline FRotator()", "", R"(
+		: Pitch(0.0), Yaw(0.0), Roll(0.0)
+	{
+	})"
+			},
+{ "\tinline FRotator(decltype(Pitch) Value)", "", R"(
+		: Pitch(Value), Yaw(Value), Roll(Value)
+	{
+	})"
+			},
+{ "\tinline FRotator(decltype(Pitch) pitch, decltype(Yaw) yaw, decltype(Roll) roll)", "", R"(
+		: Pitch(pitch), Yaw(yaw), Roll(roll)
+	{
+	})"
+			},
+{ "\tinline bool operator==(const FRotator& Other) const", "", R"(
+	{
+		return Pitch == Other.Pitch && Yaw == Other.Yaw && Roll == Other.Roll;
+	})"
+			},
+{ "\tinline bool operator!=(const FRotator& Other) const", "", R"(
+	{
+		return Pitch != Other.Pitch || Yaw != Other.Yaw || Roll != Other.Roll;
+	})"
+			},
+{ "\tFRotator operator+(const FRotator& Other) const;", "\tFRotator FRotator::operator+(const FRotator& Other) const", R"(
+	{
+		return { Pitch + Other.Pitch, Yaw + Other.Yaw, Roll + Other.Roll };
+	}
+)"
+			},
+{ "\tFRotator operator-(const FRotator& Other) const;", "\tFRotator FRotator::operator-(const FRotator& Other) const", R"(
+	{
+		return { Pitch - Other.Pitch, Yaw - Other.Yaw, Roll - Other.Roll };
+	}
+)"
+			},
+{ "\tFRotator operator*(decltype(Pitch) Scalar) const;", "\tFRotator FRotator::operator*(decltype(Pitch) Scalar) const", R"(
+	{
+		return { Pitch * Scalar, Yaw * Scalar, Roll * Scalar };
+	}
+)"
+			},
+{ "\tFRotator operator/(decltype(Pitch) Scalar) const;", "\tFRotator FRotator::operator/(decltype(Pitch) Scalar) const", R"(
+	{
+		if (Scalar == 0.0f)
+			return FRotator();
+
+		return { Pitch / Scalar, Yaw / Scalar, Roll / Scalar };
+	}
+)"
+			}
+		}
+	};
+
+	PredefinedFunctions["FQuat"] =
+	{
+		"CoreUObject",
+		{
+{ "\tinline FQuat()", "", R"(
+		: X(0.0), Y(0.0), Z(0.0), W(0.0)
+	{
+	})"
+			},
+{ "\tinline FQuat(decltype(X) Value)", "", R"(
+		: X(Value), Y(Value), Z(Value), W(Value)
+	{
+	})"
+			},
+{ "\tinline FQuat(decltype(X) x, decltype(Y) y, decltype(Z) z, decltype(W) w)", "", R"(
+		: X(x), Y(y), Z(z), W(w)
+	{
+	})"
+			},
+{ "\tinline bool operator==(const FQuat& Other) const", "", R"(
+	{
+		return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W;
+	})"
+			},
+{ "\tinline bool operator!=(const FQuat& Other) const", "", R"(
+	{
+		return X != Other.X || Y != Other.Y || Z != Other.Z || W != Other.W;
+	})"
+			},
+{ "\tFQuat operator+(const FQuat& Other) const;", "\tFQuat FQuat::operator+(const FQuat& Other) const", R"(
+	{
+		return { X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W };
+	}
+)"
+			},
+{ "\tFQuat operator-(const FQuat& Other) const;", "\tFQuat FQuat::operator-(const FQuat& Other) const", R"(
+	{
+		return { X - Other.X, Y - Other.Y, Z - Other.Z, W - Other.W };
+	}
+)"
+			},
+{ "\tFQuat operator*(decltype(X) Scalar) const;", "\tFQuat FQuat::operator*(decltype(X) Scalar) const", R"(
+	{
+		return { X * Scalar, Y * Scalar, Z * Scalar, W * Scalar };
+	}
+)"
+			},
+{ "\tFQuat operator/(decltype(X) Scalar) const;", "\tFQuat FQuat::operator/(decltype(X) Scalar) const", R"(
+	{
+		if (Scalar == 0.0f)
+			return FQuat();
+
+		return { X / Scalar, Y / Scalar, Z / Scalar, W / Scalar };
+	}
+)"
 			}
 		}
 	};
@@ -1298,6 +1566,32 @@ R"(
 		}
 
 		return GEngine; 
+	}
+)"
+			}
+		}
+	};
+
+	PredefinedFunctions["UGameEngine"] =
+	{
+		"Engine",
+		{
+			{
+				"\tstatic class UGameEngine* GetEngine();",
+				"\tclass UGameEngine* UGameEngine::GetEngine()",
+R"(
+	{
+		static class UGameEngine* GameEngine = nullptr;
+
+		if (!GameEngine)
+		{
+			GameEngine = static_cast<class UGameEngine*>(UEngine::GetEngine());
+
+			if (!GameEngine->IsA(UGameEngine::StaticClass()))
+				GameEngine = nullptr;
+		}
+
+		return GameEngine; 
 	}
 )"
 			}
@@ -1823,9 +2117,12 @@ public:
 
 	constexpr const char* DisplayIdx = "\tint32 DisplayIndex;\n";
 	constexpr const char* Number =     "\tint32 Number;\n";
-;
+	constexpr const char* Pad =        "\tint32 Pad;\n";
+
 	FNameMemberStr += Off::FName::Number == 4 ? Number : Settings::Internal::bUseCasePreservingName ? DisplayIdx : "";
 	FNameMemberStr += Off::FName::Number == 8 ? Number : Settings::Internal::bUseCasePreservingName ? DisplayIdx : "";
+	FNameMemberStr += !Settings::Internal::bUseUoutlineNumberName && Settings::Internal::bUseCasePreservingName ? Pad : "";
+	
 
 	std::string GetDisplayIndexString = std::format(R"(inline int32 GetDisplayIndex() const
 	{{
@@ -1924,8 +2221,8 @@ public:
   , FNameMemberStr
   , GetDisplayIndexString
   , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString
-  , " && Number == Other.Number"
-  , " || Number != Other.Number"));
+  , !Settings::Internal::bUseUoutlineNumberName ? " && Number == Other.Number" : ""
+  , !Settings::Internal::bUseUoutlineNumberName ? " || Number != Other.Number" : ""));
 
 	BasicHeader.Write(
 		R"(
@@ -2458,8 +2755,8 @@ public:
 		{ "FProperty", "FField" },
 		{ "FByteProperty", "FProperty" },
 		{ "FBoolProperty", "FProperty" },
-		{ "FObjectProperty", "FProperty" },
-		{ "FClassProperty", "FObjectProperty" },
+		{ "FObjectPropertyBase", "FProperty" },
+		{ "FClassProperty", "FObjectPropertyBase" },
 		{ "FStructProperty", "FProperty" },
 		{ "FArrayProperty", "FProperty" },
 		{ "FMapProperty", "FProperty" },

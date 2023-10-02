@@ -80,6 +80,7 @@ namespace Types
 		std::string InnerBody;
 		std::string Comments;
 		std::vector<Member> StructMembers;
+		int32 CustomAlignSize;
 
 	public:
 		Struct() = default;
@@ -91,7 +92,17 @@ namespace Types
 		void AddMember(Member&& NewMember);
 		void AddMembers(std::vector<Member>& NewMembers);
 
+		void SetCustomAlignment(int32 AlignOverride)
+		{
+			CustomAlignSize = AlignOverride;
+		}
+
 		std::string GetGeneratedBody();
+
+		inline bool IsEmpty()
+		{
+			return CppName.empty() && Declaration.empty();
+		}
 	};
 
 
