@@ -1,5 +1,6 @@
 #include "Generator.h"
 #include "NameArray.h"
+#include "Utils.h"
 
 #include <future>
 
@@ -176,9 +177,9 @@ void Generator::GenerateMappings()
 
 	auto WriteProperty = [&NameIdxPairs, &Buffer](UEProperty Property, auto&& WriteProperty) -> void
 	{
-		if (Property.IsA(EClassCastFlags::ByteProperty) && Property.Cast<UEByteProperty>().GetEnum()) 
+		if (Property.IsA(EClassCastFlags::ByteProperty) && Property.Cast<UEByteProperty>().GetEnum())
 			Buffer.Write<uint8>((uint8)EMappingsTypeFlags::EnumProperty);
-		
+
 		Buffer.Write<uint8>((uint8)Property.GetMappingType());
 
 		if (Property.IsA(EClassCastFlags::EnumProperty))
@@ -272,9 +273,9 @@ void Generator::GenerateMappings()
 	MappingsStream.Write<uint8>(0); // CompressionMethode::None
 	MappingsStream.Write<uint32>(DataSize); // CompressedSize
 	MappingsStream.Write<uint32>(DataSize); // DecompressedSize
-	
+
 	MappingsStream.Write<uint32>(NameIndex); // NameCount
-	
+
 	// move data to other stream
 	MappingsStream.CopyFromOtherBuffer(Buffer);
 }
@@ -327,7 +328,7 @@ void Generator::GenerateIDAMappings()
 
 			if (Super && Obj.GetVft() == Super.GetDefaultObject().GetVft())
 				continue;
-			
+
 			std::string Name = Obj.GetClass().GetCppName() + "_VFT";
 
 			uint32 Offset = static_cast<uint32>(GetOffset(Obj.GetVft()));
@@ -469,7 +470,7 @@ void Generator::GenerateSDK()
 	}
 	catch (const std::filesystem::filesystem_error& fe)
 	{
-		std::cout << "Could not create required folders! Info: \n"; 
+		std::cout << "Could not create required folders! Info: \n";
 		std::cout << fe.what() << std::endl;
 		return;
 	}
@@ -561,7 +562,7 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 #define GNAMES_OFFSET               0x{:08X}
 #define GWORLD_OFFSET               0x{:08X}
 #define APPENDSTRING_OFFSET         0x{:08X}
-)", "GAME_NAME.exe", Off::InSDK::PEIndex, NULL, Off::InSDK::PEOffset, Off::InSDK::GObjects, Off::InSDK::GNames, NULL, Off::InSDK::AppendNameToString);
+)", GetExecutableName(), Off::InSDK::PEIndex, NULL, Off::InSDK::PEOffset, Off::InSDK::GObjects, Off::InSDK::GNames, NULL, Off::InSDK::AppendNameToString);
 
 	if (Settings::XORString)
 		HeaderStream << std::format("#define {}(str) str\n", Settings::XORString);
@@ -580,9 +581,9 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 
 		Package::PackageSorterClasses.GetIncludesForPackage(BiggestPackageIdx, EIncludeFileType::Class, IncludesString, false, &Package::PackageSorterStructs, EIncludeFileType::Struct);
 		HeaderStream << IncludesString;
-		
+
 		IncludesString.clear();
-		
+
 		Package::PackageSorterParams.GetIncludesForPackage(BiggestPackageIdx, EIncludeFileType::Params, IncludesString, false);
 		HeaderStream << IncludesString;
 	}
@@ -599,15 +600,15 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 	{
 		std::string IncludesString;
 		Package::PackageSorterClasses.GetIncludesForPackage(Pack.first, EIncludeFileType::Class, IncludesString, Settings::bIncludeOnlyRelevantPackages, &Package::PackageSorterStructs, EIncludeFileType::Struct);
-	
+
 		HeaderStream << IncludesString;
 	}
-	
+
 	for (auto& Pack : Package::PackageSorterParams.AllDependencies)
 	{
 		std::string IncludesString;
 		Package::PackageSorterParams.GetIncludesForPackage(Pack.first, EIncludeFileType::Params, IncludesString, Settings::bIncludeOnlyRelevantPackages);
-	
+
 		HeaderStream << IncludesString;
 	}
 
@@ -664,7 +665,7 @@ void Generator::InitPredefinedMembers()
 	{
 		{ "static class UWorld**", "GWorld", 0x00, 0x00 }
 	};
-	
+
 	PredefinedMembers["UObject"] =
 	{
 		{ "static class TUObjectArray*", "GObjects", 0x00, 0x00 },
@@ -1597,7 +1598,7 @@ R"(
 			}
 		}
 	};
-		
+
 	PredefinedFunctions["UWorld"] =
 	{
 		"Engine",
@@ -1936,7 +1937,7 @@ public:
 		MemberBuilder NameEntryMembers;
 		NameEntryMembers.Add("\tint32 NameIndex;\n", Off::FNameEntry::NameArray::IndexOffset, sizeof(int32));
 		NameEntryMembers.Add(
-R"(
+			R"(
 	union
 	{
 		char    AnsiName[1024];
@@ -2116,13 +2117,13 @@ public:
 	std::string FNameMemberStr = "int32 ComparisonIndex;\n";
 
 	constexpr const char* DisplayIdx = "\tint32 DisplayIndex;\n";
-	constexpr const char* Number =     "\tint32 Number;\n";
-	constexpr const char* Pad =        "\tint32 Pad;\n";
+	constexpr const char* Number = "\tint32 Number;\n";
+	constexpr const char* Pad = "\tint32 Pad;\n";
 
 	FNameMemberStr += Off::FName::Number == 4 ? Number : Settings::Internal::bUseCasePreservingName ? DisplayIdx : "";
 	FNameMemberStr += Off::FName::Number == 8 ? Number : Settings::Internal::bUseCasePreservingName ? DisplayIdx : "";
 	FNameMemberStr += !Settings::Internal::bUseUoutlineNumberName && Settings::Internal::bUseCasePreservingName ? Pad : "";
-	
+
 
 	std::string GetDisplayIndexString = std::format(R"(inline int32 GetDisplayIndex() const
 	{{
@@ -2130,7 +2131,7 @@ public:
 	}})", Settings::Internal::bUseCasePreservingName ? "DisplayIndex" : "ComparisonIndex");
 
 	constexpr const char* GetRawStringWithAppendString =
- R"(inline std::string GetRawString() const
+		R"(inline std::string GetRawString() const
 	{
 		thread_local FString TempString(1024);
 		static void(*AppendString)(const FName*, FString&) = nullptr;
@@ -2147,7 +2148,7 @@ public:
 	})";
 
 	constexpr const char* GetRawStringWithNameArray =
- R"(inline std::string GetRawString() const
+		R"(inline std::string GetRawString() const
 	{
 		// if (!GNames) InitGNames();
 
@@ -2160,7 +2161,7 @@ public:
 	})";
 
 	constexpr const char* GetRawStringWithNameArrayWithOutlineNumber =
- R"(inline std::string GetRawString() const
+		R"(inline std::string GetRawString() const
 	{
 		// if (!GNames) InitGNames();
 
@@ -2218,11 +2219,11 @@ public:
 	}}
 }};
 )", Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseNamePool ? "FNamePool" : "TNameEntryArray" : "void"
-  , FNameMemberStr
-  , GetDisplayIndexString
-  , Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString
-  , !Settings::Internal::bUseUoutlineNumberName ? " && Number == Other.Number" : ""
-  , !Settings::Internal::bUseUoutlineNumberName ? " || Number != Other.Number" : ""));
+, FNameMemberStr
+, GetDisplayIndexString
+, Off::InSDK::AppendNameToString == 0 ? Settings::Internal::bUseUoutlineNumberName ? GetRawStringWithNameArrayWithOutlineNumber : GetRawStringWithNameArray : GetRawStringWithAppendString
+, !Settings::Internal::bUseUoutlineNumberName ? " && Number == Other.Number" : ""
+, !Settings::Internal::bUseUoutlineNumberName ? " || Number != Other.Number" : ""));
 
 	BasicHeader.Write(
 		R"(
@@ -2748,7 +2749,7 @@ public:
 	std::unordered_map<std::string, int32> ClassSizePairs;
 
 	constexpr std::array<FPropertyPredef, 0xD> FPropertyClassSuperPairs =
-	{{
+	{ {
 		{ "FFieldClass", "" },
 		{ "FFieldVariant", "" },
 		{ "FField", "" },
@@ -2762,7 +2763,7 @@ public:
 		{ "FMapProperty", "FProperty" },
 		{ "FSetProperty", "FProperty" },
 		{ "FEnumProperty", "FProperty" }
-	}};
+	} };
 
 	ClassSizePairs.reserve(FPropertyClassSuperPairs.size());
 	for (auto& [ClassName, SuperName] : FPropertyClassSuperPairs)

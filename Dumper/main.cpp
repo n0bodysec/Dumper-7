@@ -6,10 +6,10 @@
 
 enum class EFortToastType : uint8
 {
-        Default                        = 0,
-        Subdued                        = 1,
-        Impactful                      = 2,
-        EFortToastType_MAX             = 3,
+	Default				= 0,
+	Subdued				= 1,
+	Impactful			= 2,
+	EFortToastType_MAX	= 3,
 };
 
 DWORD MainThread(HMODULE Module)
@@ -22,7 +22,7 @@ DWORD MainThread(HMODULE Module)
 	auto t_1 = high_resolution_clock::now();
 
 	std::cout << "Started Generation [Dumper-7]!\n";
-  
+
 	Generator::Init();
 
 	if (Settings::GameName.empty() && Settings::GameVersion.empty())

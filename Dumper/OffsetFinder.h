@@ -132,7 +132,7 @@ namespace OffsetFinder
 		
 		const uint8* NameAddress = static_cast<const uint8*>(FirstObject.GetFName().GetAddress());
 
-		const int32 FNameFirstInt /* ComparisonIndex */ =  *reinterpret_cast<const int32*>(NameAddress);
+		const int32 FNameFirstInt /* ComparisonIndex */ = *reinterpret_cast<const int32*>(NameAddress);
 		const int32 FNameSecondInt /* [Number/DisplayIndex] */ = *reinterpret_cast<const int32*>(NameAddress + 0x4);
 
 		const int32 FNameSize = Off::UObject::Outer - Off::UObject::Name;

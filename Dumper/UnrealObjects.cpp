@@ -610,7 +610,7 @@ void* UEFunction::GetExecFunction() const
 	return *reinterpret_cast<void**>(Object + Off::UFunction::ExecFunction);
 }
 
-std::string UEFunction::StringifyFlags()  const
+std::string UEFunction::StringifyFlags() const
 {
 	return StringifyFunctionFlags(GetFunctionFlags());
 }
@@ -732,15 +732,15 @@ std::string UEProperty::GetCppType() const
 	{
 		return Cast<UEByteProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::UInt16Property)
+	else if (TypeFlags & EClassCastFlags::UInt16Property)
 	{
 		return "uint16";
 	}
-	else if (TypeFlags &  EClassCastFlags::UInt32Property)
+	else if (TypeFlags & EClassCastFlags::UInt32Property)
 	{
 		return "uint32";
 	}
-	else if (TypeFlags &  EClassCastFlags::UInt64Property)
+	else if (TypeFlags & EClassCastFlags::UInt64Property)
 	{
 		return "uint64";
 	}
@@ -748,35 +748,35 @@ std::string UEProperty::GetCppType() const
 	{
 		return "int8";
 	}
-	else if (TypeFlags &  EClassCastFlags::Int16Property)
+	else if (TypeFlags & EClassCastFlags::Int16Property)
 	{
 		return "int16";
 	}
-	else if (TypeFlags &  EClassCastFlags::IntProperty)
+	else if (TypeFlags & EClassCastFlags::IntProperty)
 	{
 		return "int32";
 	}
-	else if (TypeFlags &  EClassCastFlags::Int64Property)
+	else if (TypeFlags & EClassCastFlags::Int64Property)
 	{
 		return "int64";
 	}
-	else if (TypeFlags &  EClassCastFlags::FloatProperty)
+	else if (TypeFlags & EClassCastFlags::FloatProperty)
 	{
 		return "float";
 	}
-	else if (TypeFlags &  EClassCastFlags::DoubleProperty)
+	else if (TypeFlags & EClassCastFlags::DoubleProperty)
 	{
 		return "double";
 	}
-	else if (TypeFlags &  EClassCastFlags::ClassProperty)
+	else if (TypeFlags & EClassCastFlags::ClassProperty)
 	{
 		return Cast<UEClassProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::NameProperty)
+	else if (TypeFlags & EClassCastFlags::NameProperty)
 	{
 		return "class FName";
 	}
-	else if (TypeFlags &  EClassCastFlags::StrProperty)
+	else if (TypeFlags & EClassCastFlags::StrProperty)
 	{
 		return "class FString";
 	}
@@ -784,23 +784,23 @@ std::string UEProperty::GetCppType() const
 	{
 		return "class FText";
 	}
-	else if (TypeFlags &  EClassCastFlags::BoolProperty)
+	else if (TypeFlags & EClassCastFlags::BoolProperty)
 	{
 		return Cast<UEBoolProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::StructProperty)
+	else if (TypeFlags & EClassCastFlags::StructProperty)
 	{
 		return Cast<UEStructProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::ArrayProperty)
+	else if (TypeFlags & EClassCastFlags::ArrayProperty)
 	{
 		return Cast<UEArrayProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::WeakObjectProperty)
+	else if (TypeFlags & EClassCastFlags::WeakObjectProperty)
 	{
 		return Cast<UEWeakObjectProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::LazyObjectProperty)
+	else if (TypeFlags & EClassCastFlags::LazyObjectProperty)
 	{
 		return Cast<UELazyObjectProperty>().GetCppType();
 	}
@@ -808,23 +808,23 @@ std::string UEProperty::GetCppType() const
 	{
 		return Cast<UESoftClassProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::SoftObjectProperty)
+	else if (TypeFlags & EClassCastFlags::SoftObjectProperty)
 	{
 		return Cast<UESoftObjectProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::ObjectProperty)
+	else if (TypeFlags & EClassCastFlags::ObjectProperty)
 	{
 		return Cast<UEObjectProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::MapProperty)
+	else if (TypeFlags & EClassCastFlags::MapProperty)
 	{
 		return Cast<UEMapProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::SetProperty)
+	else if (TypeFlags & EClassCastFlags::SetProperty)
 	{
 		return Cast<UESetProperty>().GetCppType();
 	}
-	else if (TypeFlags &  EClassCastFlags::EnumProperty)
+	else if (TypeFlags & EClassCastFlags::EnumProperty)
 	{
 		return Cast<UEEnumProperty>().GetCppType();
 	}

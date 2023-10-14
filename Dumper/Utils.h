@@ -80,7 +80,7 @@ struct LDR_DATA_TABLE_ENTRY
 	ULONG SizeOfImage;
 	UNICODE_STRING FullDllName;
 	UNICODE_STRING BaseDllName;
-}; 
+};
 
 inline _TEB* _NtCurrentTeb()
 {
@@ -305,7 +305,7 @@ public:
 	{
 		return Address != nullptr;
 	}
-	explicit operator void*()
+	explicit operator void* ()
 	{
 		return Address;
 	}
@@ -344,7 +344,7 @@ public:
 			}
 		}
 
-		return  MemAddress(nullptr);
+		return MemAddress(nullptr);
 	}
 
 	inline void* RelativePattern(const char* Pattern, int32_t Range, int32_t Relative = 0)
@@ -356,7 +356,7 @@ public:
 	}
 
 	// every occurence of E8 counts as a call, use for max 1-5 calls only
-	/* Negative index for search up, positive for search down  | goes beyond function-boundaries */
+	/* Negative index for search up, positive for search down | goes beyond function-boundaries */
 	inline void* GetCalledFunction(int32_t FunctionIndex)
 	{
 		if (!Address || FunctionIndex == 0)
@@ -377,7 +377,7 @@ public:
 
 					if ((uint64_t(Func) % 0x4) != 0x0)
 						continue;
-						
+
 					if (++NumCalls == FunctionIndex)
 					{
 						return Func;
@@ -517,7 +517,7 @@ inline MemAddress FindByStringInAllSections(Type RefStr, void* StartAddress = nu
 			{
 				auto a = std::wstring((const wchar_t*)StrPtr);
 
-				if (wcscmp((const wchar_t*)RefStr, (const wchar_t*)StrPtr) == 0) 
+				if (wcscmp((const wchar_t*)RefStr, (const wchar_t*)StrPtr) == 0)
 				{
 					// std::wcout << L"FoundStr wref: " << (const wchar_t*)(SearchStart + i) << L"\n";
 
@@ -536,5 +536,16 @@ inline MemAddress FindByWStringInAllSections(const wchar_t* RefStr)
 	return FindByStringInAllSections<const wchar_t*>(RefStr);
 }
 
+inline std::string GetExecutableName()
+{
+	char buffer[MAX_PATH];
+	GetModuleFileNameA(NULL, buffer, MAX_PATH);
 
+	std::string fullPath = buffer;
+	size_t lastSlash = fullPath.find_last_of('\\');
 
+	if (lastSlash != std::string::npos)
+		return fullPath.substr(lastSlash + 1);
+
+	return "";
+}
