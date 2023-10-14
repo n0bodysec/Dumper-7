@@ -118,7 +118,7 @@ namespace Types
 		std::string Comments;
 
 	public:
-		Function(std::string Type, std::string Name, std::string SuperName, std::vector<Parameter> Parameters = {}, bool bIsStatic = false, bool bAddNewLine = false);
+		Function(std::string Type, std::string Name, std::string SuperName, std::vector<Parameter> Parameters = {}, bool bIsStatic = false, bool bAddNewLine = false, std::string HComment = "");
 
 		std::vector<Parameter>& GetParameters();
 		std::string GetParametersAsString();

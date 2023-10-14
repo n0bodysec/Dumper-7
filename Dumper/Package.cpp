@@ -467,7 +467,7 @@ Types::Function Package::StaticGenerateFunction(UEFunction& Function, UEStruct& 
 		}
 	}
 
-	Types::Function Func(ReturnType, FunctionName, Super.GetCppName(), Params);
+	Types::Function Func(ReturnType, FunctionName, Super.GetCppName(), Params, false, false, std::format("{} // ({}) // @ game+0x{:X}", Function.GetFullName(), Function.StringifyFlags(), (uintptr_t)Function.GetAddress()));
 
 	Func.AddCommentEx("/**");
 	Func.AddCommentEx(" * Function:");

@@ -170,13 +170,13 @@ std::string Types::Member::GetGeneratedBody()
 	return std::format("\t{:{}}{:{}} {}\n", Type, 45, Name + ";", 50, Comment);
 }
 
-Types::Function::Function(std::string Type, std::string Name, std::string SuperName, std::vector<Parameter> Parameters, bool bIsStatic, bool bAddNewLine)
+Types::Function::Function(std::string Type, std::string Name, std::string SuperName, std::vector<Parameter> Parameters, bool bIsStatic, bool bAddNewLine, std::string HComment)
 {
 	this->Parameters = Parameters;
 
 	std::string ParamStr = GetParametersAsString();
 
-	DeclarationH = std::format("{}{} {}({});{}", (bIsStatic ? "static " : ""), Type, Name, ParamStr, (bAddNewLine ? "\n" : ""));
+	DeclarationH = std::format("{}{} {}({});{}{}", (bIsStatic ? "static " : ""), Type, Name, ParamStr, (bAddNewLine ? "\n" : ""), (HComment != "" ? (" // " + HComment) : ""));
 	DeclarationCPP = std::format("{} {}::{}({})", Type, SuperName, Name, ParamStr);
 
 	Body = "{";
