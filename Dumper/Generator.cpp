@@ -911,7 +911,7 @@ R"(
 				"\ttemplate<typename UEType = UObject>\n\tstatic UEType* FindObject(EClassCastFlags RequiredType = EClassCastFlags::None)", "",
 R"(
 	{
-		auto v = T::StaticClass();
+		auto v = UEType::StaticClass();
 		for (int i = 0; i < GObjects->Num(); ++i)
 		{
 			UObject* Object = GObjects->GetByIndex(i);
@@ -977,6 +977,7 @@ R"(
 				"\ttemplate<typename UEType = UObject>\n\tstatic UEType* FindObjects(EClassCastFlags RequiredType = EClassCastFlags::None)", "",
 R"(
 	{
+		auto v = UEType::StaticClass();
 		std::vector<UEType*> ret;
 		for (int i = 0; i < GObjects->Num(); ++i)
 		{
@@ -1015,7 +1016,7 @@ R"(
 				"\ttemplate<typename UEType = UObject>\n\tstatic UEType* GetObjectCasted(size_t Index)", "",
 R"(
 	{
-		return static_cast<T*>(GObjects->GetByIndex(Index));
+		return static_cast<UEType*>(GObjects->GetByIndex(Index));
 	}
 )"
 			},
