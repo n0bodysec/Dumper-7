@@ -186,14 +186,16 @@ Types::Member Package::GenerateBytePadding(const int32 Offset, const int32 PadSi
 {
 	static uint32 PadNum = 0;
 
-	return Types::Member("uint8", std::format("Pad_{:X}[0x{:X}]", PadNum++, PadSize), Reason);
+	PadNum++;
+	return Types::Member("uint8", std::format("SDK_PAD(0x{:X})", PadSize), Reason);
 }
 
 Types::Member Package::GenerateBitPadding(const int32 Offset, const int32 PadSize, std::string&& Reason)
 {
 	static uint32 BitPadNum = 0;
 
-	return Types::Member("uint8", std::format("BitPad_{:X} : {:X}", BitPadNum++, PadSize), std::move(Reason));
+	BitPadNum++;
+	return Types::Member("uint8", std::format("SDK_BITPAD(0x{:X})", PadSize), std::move(Reason));
 }
 
 void Package::GatherDependencies(const std::vector<int32_t>& PackageMembers)
@@ -467,7 +469,7 @@ Types::Function Package::StaticGenerateFunction(UEFunction& Function, UEStruct& 
 		}
 	}
 
-	Types::Function Func(ReturnType, FunctionName, Super.GetCppName(), Params, false, false, std::format("{} // ({}) // @ game+0x{:X}", Function.GetFullName(), Function.StringifyFlags(), (uintptr_t)Function.GetAddress()));
+	Types::Function Func(ReturnType, FunctionName, Super.GetCppName(), Params, false, false, std::format("{} // ({})", Function.GetFullName(), Function.StringifyFlags()));
 
 	Func.AddCommentEx("/**");
 	Func.AddCommentEx(" * Function:");

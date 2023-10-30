@@ -549,7 +549,13 @@ void Generator::GenerateSDKHeader(const fs::path& SdkPath, int32 BiggestPackageI
 	HeaderStream << "typedef unsigned __int8 uint8;\n";
 	HeaderStream << "typedef unsigned __int16 uint16;\n";
 	HeaderStream << "typedef unsigned __int32 uint32;\n";
-	HeaderStream << "typedef unsigned __int64 uint64;\n";
+	HeaderStream << "typedef unsigned __int64 uint64;\n\n";
+
+	HeaderStream << "// Padding\n";
+	HeaderStream << "#define CONCAT_IMPL(x, y)  x##y\n";
+	HeaderStream << "#define MACRO_CONCAT(x, y) CONCAT_IMPL(x, y)\n";
+	HeaderStream << "#define SDK_PAD(SIZE)      MACRO_CONCAT(Pad_, __COUNTER__)[SIZE];\n";
+	HeaderStream << "#define SDK_BITPAD(SIZE)   MACRO_CONCAT(BitPad_, __COUNTER__) : SIZE;\n";
 
 	HeaderStream << std::format(
 		R"(
@@ -1638,9 +1644,10 @@ private:
 	inline void AddPadding(int32 Size)
 	{
 		static int32 PaddingIdx = 0x0;
-
+		
+		PaddingIdx++;
 		CurrentSize += Size;
-		Members += std::format("{}uint8 Pad_{:X}[0x{:X}];\n", Indent, PaddingIdx++, Size);
+		Members += std::format("{}uint8 SDK_PAD(0x{:X});\n", Indent, Size);
 	}
 
 public:
@@ -1763,7 +1770,7 @@ public:
 	{
 		constexpr const char* MemmberString = R"(
 	FUObjectItem** Objects;
-	uint8 Pad_0[0x08];
+	uint8 SDK_PAD(0x08);
 	int32 MaxElements;
 	int32 NumElements;
 	int32 MaxChunks;
@@ -1771,7 +1778,7 @@ public:
 )";
 
 		constexpr const char* MemberStringWeirdLayout = R"(
-	uint8 Pad_0[0x10];
+	uint8 SDK_PAD(0x10);
 	int32 MaxElements;
 	int32 NumElements;
 	int32 MaxChunks;
