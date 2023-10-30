@@ -930,7 +930,7 @@ R"(
 )"
 			},
 			{
-				"\ttemplate<typename UEType = UObject>\n\tstatic UEType* FindObjects(const std::string& FullName, EClassCastFlags RequiredType = EClassCastFlags::None)", "",
+				"\ttemplate<typename UEType = UObject>\n\tstatic std::vector<UEType*> FindObjects(const std::string& FullName, EClassCastFlags RequiredType = EClassCastFlags::None)", "",
 R"(
 	{
 		std::vector<UEType*> ret;
@@ -952,7 +952,7 @@ R"(
 )"
 			},
 			{
-				"\ttemplate<typename UEType = UObject>\n\tstatic UEType* FindObjectsFast(const std::string& Name, EClassCastFlags RequiredType = EClassCastFlags::None)", "",
+				"\ttemplate<typename UEType = UObject>\n\tstatic std::vector<UEType*> FindObjectsFast(const std::string& Name, EClassCastFlags RequiredType = EClassCastFlags::None)", "",
 R"(
 	{
 		std::vector<UEType*> ret;
@@ -974,7 +974,7 @@ R"(
 )"
 			},
 			{
-				"\ttemplate<typename UEType = UObject>\n\tstatic UEType* FindObjects(EClassCastFlags RequiredType = EClassCastFlags::None)", "",
+				"\ttemplate<typename UEType = UObject>\n\tstatic std::vector<UEType*> FindObjects(EClassCastFlags RequiredType = EClassCastFlags::None)", "",
 R"(
 	{
 		auto v = UEType::StaticClass();
@@ -1686,7 +1686,7 @@ bool InitSdk(const std::wstring& ModuleName, uintptr_t GObjectsOffset, uintptr_t
 
 	UObject::GObjects = reinterpret_cast<TUObjectArray*>(mBaseAddress + GObjectsOffset);
 	FName::GNames = {}(mBaseAddress + GNamesOffset);
-	UWorld::GWorld = reinterpret_castUWorld**>(mBaseAddress + GWorldOffset);
+	UWorld::GWorld = reinterpret_cast<UWorld**>(mBaseAddress + GWorldOffset);
 
 	return true;
 }}
