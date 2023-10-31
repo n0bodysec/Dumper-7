@@ -1431,14 +1431,14 @@ R"(
 		OutMatrix.WPlane.Y = Translation.Y;
 		OutMatrix.WPlane.Z = Translation.Z;
 		
-		const float x2 = Rotation.X + Rotation.X;
-		const float y2 = Rotation.Y + Rotation.Y;
-		const float z2 = Rotation.Z + Rotation.Z;
+		const auto x2 = Rotation.X + Rotation.X;
+		const auto y2 = Rotation.Y + Rotation.Y;
+		const auto z2 = Rotation.Z + Rotation.Z;
 		
 		{
-			const float xx2 = Rotation.X * x2;
-			const float yy2 = Rotation.Y * y2;
-			const float zz2 = Rotation.Z * z2;
+			const auto xx2 = Rotation.X * x2;
+			const auto yy2 = Rotation.Y * y2;
+			const auto zz2 = Rotation.Z * z2;
 		
 			OutMatrix.XPlane.X = (1.0f - (yy2 + zz2)) * Scale3D.X;
 			OutMatrix.YPlane.Y = (1.0f - (xx2 + zz2)) * Scale3D.Y;
@@ -1446,24 +1446,24 @@ R"(
 		}
 		
 		{
-			const float yz2 = Rotation.Y * z2;
-			const float wx2 = Rotation.W * x2;
+			const auto yz2 = Rotation.Y * z2;
+			const auto wx2 = Rotation.W * x2;
 		
 			OutMatrix.ZPlane.Y = (yz2 - wx2) * Scale3D.Z;
 			OutMatrix.YPlane.Z = (yz2 + wx2) * Scale3D.Y;
 		}
 		
 		{
-			const float xy2 = Rotation.X * y2;
-			const float wz2 = Rotation.W * z2;
+			const auto xy2 = Rotation.X * y2;
+			const auto wz2 = Rotation.W * z2;
 		
 			OutMatrix.YPlane.X = (xy2 - wz2) * Scale3D.Y;
 			OutMatrix.XPlane.Y = (xy2 + wz2) * Scale3D.X;
 		}
 		
 		{
-			const float xz2 = Rotation.X * z2;
-			const float wy2 = Rotation.W * y2;
+			const auto xz2 = Rotation.X * z2;
+			const auto wy2 = Rotation.W * y2;
 		
 			OutMatrix.ZPlane.X = (xz2 + wy2) * Scale3D.Z;
 			OutMatrix.XPlane.Z = (xz2 - wy2) * Scale3D.X;
@@ -1900,7 +1900,7 @@ public:
 
 	inline FString(const wchar_t* WChar)
 	{
-		MaxElements = NumElements = *WChar ? std::wcslen(WChar) + 1 : 0;
+		MaxElements = NumElements = *WChar ? static_cast<int32>(std::wcslen(WChar)) + 1 : 0;
 
 		if (NumElements)
 		{
@@ -2669,7 +2669,7 @@ inline bool operator&(EClassCastFlags Left, EClassCastFlags Right)
 	BasicHeader.Write(
 		R"(
 
-enum class EClassFlags : int32
+enum class EClassFlags : uint32
 {
 	CLASS_None					= 0x00000000u,
 	Abstract					= 0x00000001u,
