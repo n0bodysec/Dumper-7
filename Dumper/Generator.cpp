@@ -1709,14 +1709,14 @@ bool InitSdk()
 template<typename Fn>
 inline Fn GetVFunction(const void* Instance, std::size_t Index)
 {
-	auto Vtable = *reinterpret_cast<const void***>(const_cast<void*>(Instance));
-	return reinterpret_cast<Fn>(Vtable[Index]);
+	auto Vtable = *static_cast<const void***>(const_cast<void*>(Instance));
+	return static_cast<Fn>(Vtable[Index]);
 }
 )");
 
 	constexpr const char* DefaultDecryption = R"([](void* ObjPtr) -> uint8*
 	{
-		return reinterpret_cast<uint8*>(ObjPtr);
+		return static_cast<uint8*>(ObjPtr);
 	})";
 
 	std::string DecryptionStrToUse = ObjectArray::DecryptionLambdaStr.empty() ? DefaultDecryption : std::move(ObjectArray::DecryptionLambdaStr);
@@ -1843,7 +1843,7 @@ public:
 	}
 
 	inline TArray(int32 Size)
-		:NumElements(0), MaxElements(Size), Data(reinterpret_cast<T*>(malloc(sizeof(T) * Size)))
+		:NumElements(0), MaxElements(Size), Data(static_cast<T*>(malloc(sizeof(T) * Size)))
 	{
 	}
 
