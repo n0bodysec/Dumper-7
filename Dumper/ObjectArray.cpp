@@ -197,7 +197,7 @@ void ObjectArray::Init(bool bScanAllMemory)
 		std::cout << "Searching for GObjects...\n\n";
 
 
-	for (int i = 0; i < SearchRange; i += 0x4)
+	for (DWORD i = 0; i < SearchRange; i += 0x4)
 	{
 
 		auto FixedArray = reinterpret_cast<FFixedUObjectArray*>(SearchBase + i);

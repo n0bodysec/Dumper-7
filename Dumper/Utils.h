@@ -435,7 +435,7 @@ inline MemAddress FindByString(Type RefStr)
 		}
 	}
 
-	for (int i = 0; i < DataSize; i++)
+	for (DWORD i = 0; i < DataSize; i++)
 	{
 		if constexpr (std::is_same<Type, const char*>())
 		{
@@ -457,7 +457,7 @@ inline MemAddress FindByString(Type RefStr)
 		}
 	}
 
-	for (int i = 0; i < TextSize; i++)
+	for (DWORD i = 0; i < TextSize; i++)
 	{
 		// opcode: lea
 		if ((TextSection[i] == uint8_t(0x4C) || TextSection[i] == uint8_t(0x48)) && TextSection[i + 1] == uint8_t(0x8D))
@@ -494,7 +494,7 @@ inline MemAddress FindByStringInAllSections(Type RefStr, void* StartAddress = nu
 	uint8_t* SearchStart = StartAddress ? reinterpret_cast<uint8_t*>(StartAddress) : reinterpret_cast<uint8_t*>(ImageBase);
 	DWORD SearchRange = SizeOfImage;
 
-	for (int i = 0; i < SearchRange; i++)
+	for (DWORD i = 0; i < SearchRange; i++)
 	{
 		// opcode: lea
 		if ((SearchStart[i] == uint8_t(0x4C) || SearchStart[i] == uint8_t(0x48)) && SearchStart[i + 1] == uint8_t(0x8D))

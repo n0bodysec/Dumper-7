@@ -1069,7 +1069,7 @@ R"(
 			{
 				for (UField* Field = Clss->Children; Field; Field = Field->Next)
 				{
-					if(Field->HasTypeFlag(EClassCastFlags::Function) && Field->GetName() == FuncName)
+					if (Field->HasTypeFlag(EClassCastFlags::Function) && Field->GetName() == FuncName)
 					{
 						return static_cast<class UFunction*>(Field);
 					}	

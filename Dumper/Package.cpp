@@ -120,7 +120,7 @@ void PackageDependencyManager::GetPropertyDependency(UEProperty Prop, std::unord
 
 void PackageDependencyManager::GetFunctionDependency(UEFunction Func, std::unordered_set<int32>& Store)
 {
-	for (UEProperty Property : Func.GetProperties())
+	for (UEProperty Property : Func.GetProperties(true))
 	{
 		PackageDependencyManager::GetPropertyDependency(Property, Store);
 	}
@@ -426,7 +426,7 @@ Types::Function Package::StaticGenerateFunction(UEFunction& Function, UEStruct& 
 	bool bHasRetType = false;
 	bool bHasParams = false;
 
-	for (UEProperty Param : Function.GetProperties())
+	for (UEProperty Param : Function.GetProperties(true))
 	{
 		bHasParams = true;
 
@@ -477,7 +477,7 @@ Types::Function Package::StaticGenerateFunction(UEFunction& Function, UEStruct& 
 	Func.AddCommentEx(" * 		Flags  -> (" + Function.StringifyFlags() + ")");
 	Func.AddCommentEx(" * Parameters:");
 
-	for (UEProperty Param : Function.GetProperties())
+	for (UEProperty Param : Function.GetProperties(true))
 	{
 		Func.AddCommentEx(std::format(" *  		{:{}}{:{}}({})", Param.GetCppType(), 35, Param.GetValidName(), 65, Param.StringifyFlags()));
 	}
@@ -564,7 +564,7 @@ Types::Struct Package::StaticGenerateStruct(UEStruct Struct, bool bIsFunction)
 	RetStruct.AddCommentEx(std::format(" * Size -> 0x{:04X} (FullSize[0x{:04X}] - InheritedSize[0x{:04X}])", Size - SuperSize, Size, SuperSize));
 	RetStruct.AddCommentEx(" */");
 
-	std::vector<UEProperty> Properties = Struct.GetProperties();
+	std::vector<UEProperty> Properties = Struct.GetProperties(bIsFunction);
 
 	static int NumProps = 0;
 	static int NumFuncs = 0;

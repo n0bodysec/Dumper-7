@@ -458,7 +458,7 @@ int32 UEStruct::GetStructSize() const
 	return *reinterpret_cast<int32*>(Object + Off::UStruct::Size);
 }
 
-std::vector<UEProperty> UEStruct::GetProperties() const
+std::vector<UEProperty> UEStruct::GetProperties(bool CheckFlags) const
 {
 	std::vector<UEProperty> Properties;
 
@@ -468,7 +468,16 @@ std::vector<UEProperty> UEStruct::GetProperties() const
 		{
 			if (Field.IsA(EClassCastFlags::Property))
 			{
-				Properties.push_back(Field.Cast<UEProperty>());
+				UEProperty prop = Field.Cast<UEProperty>();
+				
+				if (CheckFlags && Settings::bCheckFnPropertiesFlags)
+				{
+					EPropertyFlags flags = prop.GetPropertyFlags();
+
+					if (flags & EPropertyFlags::Parm || flags & EPropertyFlags::ReturnParm)
+						Properties.push_back(prop);
+				}
+				else Properties.push_back(prop);
 			}
 		}
 
@@ -479,7 +488,16 @@ std::vector<UEProperty> UEStruct::GetProperties() const
 	{
 		if (Field.IsA(EClassCastFlags::Property))
 		{
-			Properties.push_back(Field.Cast<UEProperty>());
+			UEProperty prop = Field.Cast<UEProperty>();
+
+			if (CheckFlags && Settings::bCheckFnPropertiesFlags)
+			{
+				EPropertyFlags flags = prop.GetPropertyFlags();
+
+				if (flags & EPropertyFlags::Parm || flags & EPropertyFlags::ReturnParm)
+					Properties.push_back(prop);
+			}
+			else Properties.push_back(prop);
 		}
 	}
 

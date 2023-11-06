@@ -24,6 +24,8 @@ namespace Settings
 	// Do not XOR strings -> XORString = nullptr
 	inline constexpr const char* XORString = nullptr;
 
+	// Check functions properties' flag
+	inline constexpr const bool bCheckFnPropertiesFlags = true;
 
 	namespace Debug
 	{

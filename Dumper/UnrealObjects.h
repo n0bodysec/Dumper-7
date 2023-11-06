@@ -184,7 +184,7 @@ public:
 	UEFField GetChildProperties() const;
 	int32 GetStructSize() const;
 
-	std::vector<UEProperty> GetProperties() const;
+	std::vector<UEProperty> GetProperties(bool CheckFlags = false) const;
 
 	UEProperty FindMember(const std::string& MemberName, EClassCastFlags TypeFlags = EClassCastFlags::None) const;
 
