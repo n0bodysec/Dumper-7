@@ -1179,7 +1179,17 @@ R"(
 		return { X / Scalar, Y / Scalar, Z / Scalar };
 	}
 )"
-			}
+			},
+{ "\tinline auto Distance(const FVector& v) const", "", R"(
+	{
+		return sqrt(pow(v.X - X, 2.0) + pow(v.Y - Y, 2.0) + pow(v.Z - Z, 2.0));
+	})"
+			},
+{ "\tinline auto DistanceMeter(FVector& v) const", "", R"(
+	{
+		return Distance(v) * 0.01f;
+	})"
+			},
 		}
 	};
 
