@@ -204,7 +204,7 @@ MemberManager FunctionWrapper::GetMembers() const
 {
     assert(bIsUnrealFunction && "FunctionWrapper doesn't contain UnrealFunction. Illegal call to 'GetMembers()'.");
 
-    return MemberManager(Function);
+    return MemberManager(Function, Settings::CppGenerator::bCheckFunctionFlags);
 }
 
 std::string FunctionWrapper::StringifyFlags(const char* Seperator) const

@@ -27,6 +27,9 @@ namespace Settings
 		/* Do not XOR strings -> XORString = nullptr */
 		constexpr const char* XORString = nullptr;
 
+		/* Check function properties' flags */
+		constexpr const bool bCheckFunctionFlags = true;
+
 		/* Customizable part of Cpp code to allow for a custom 'uintptr_t InSDKUtils::GetImageBase()' function */
 		constexpr const char* GetImageBaseFuncBody = 
 R"(	{

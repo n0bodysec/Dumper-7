@@ -194,7 +194,7 @@ private:
 	const std::vector<PredefinedFunction>* PredefFunctions = nullptr;
 
 private:
-	MemberManager(UEStruct Str);
+	MemberManager(UEStruct Str, bool CheckFlags = false);
 	MemberManager(const PredefinedStruct* Str);
 
 public:

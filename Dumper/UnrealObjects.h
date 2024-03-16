@@ -188,7 +188,7 @@ public:
 	int32 GetMinAlignment() const;
 	int32 GetStructSize() const;
 
-	std::vector<UEProperty> GetProperties() const;
+	std::vector<UEProperty> GetProperties(bool CheckFlags = false) const;
 	std::vector<UEFunction> GetFunctions() const;
 
 
