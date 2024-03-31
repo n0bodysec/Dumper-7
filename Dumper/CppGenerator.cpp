@@ -228,6 +228,9 @@ std::string CppGenerator::GenerateFunctionInHeader(const MemberManager& Members)
 
 		for (const PropertyWrapper& Param : FuncParams.IterateMembers())
 		{
+			if (!Param.HasPropertyFlags(EPropertyFlags::Parm))
+				continue;
+
 			std::string Type = GetMemberTypeString(Param);
 
 			if (Param.IsReturnParam())
@@ -304,6 +307,9 @@ CppGenerator::FunctionInfo CppGenerator::GenerateFunctionInfo(const FunctionWrap
 
 	for (const PropertyWrapper& Param : FuncParams.IterateMembers())
 	{
+		if (!Param.HasPropertyFlags(EPropertyFlags::Parm))
+			continue;
+
 		std::string Type = GetMemberTypeString(Param);
 
 		bool bIsConst = Param.HasPropertyFlags(EPropertyFlags::ConstParm);
@@ -311,11 +317,11 @@ CppGenerator::FunctionInfo CppGenerator::GenerateFunctionInfo(const FunctionWrap
 		ParamInfo PInfo;
 		PInfo.Type = Type;
 
+		if (bIsConst)
+			Type = "const " + Type;
+
 		if (Param.IsReturnParam())
 		{
-			if (bIsConst)
-				Type = "const " + Type;
-
 			RetFuncInfo.RetType = Type;
 			RetFuncInfo.bIsReturningVoid = false;
 
@@ -330,7 +336,7 @@ CppGenerator::FunctionInfo CppGenerator::GenerateFunctionInfo(const FunctionWrap
 
 		bool bIsRef = false;
 		bool bIsOut = false;
-		bool bIsMoveType = Param.IsType(EClassCastFlags::StructProperty | EClassCastFlags::ArrayProperty | EClassCastFlags::StrProperty | EClassCastFlags::MapProperty | EClassCastFlags::SetProperty);
+		bool bIsMoveType = Param.IsType(EClassCastFlags::StructProperty | EClassCastFlags::ArrayProperty | EClassCastFlags::StrProperty | EClassCastFlags::TextProperty | EClassCastFlags::MapProperty | EClassCastFlags::SetProperty);
 
 		if (Param.HasPropertyFlags(EPropertyFlags::ReferenceParm))
 		{
@@ -1537,6 +1543,10 @@ void CppGenerator::Generate()
 		if (Package.HasClasses())
 		{
 			ClassesFile = StreamType(Subfolder / (FileName + "_classes.hpp"));
+
+			if (!ClassesFile.is_open())
+				std::cout << "Error opening file \"" << (FileName + "_classes.hpp") << "\"" << std::endl;
+
 			WriteFileHead(ClassesFile, Package, EFileType::Classes);
 
 			/* Write enum foward declarations before all of the classes */
@@ -1546,6 +1556,10 @@ void CppGenerator::Generate()
 		if (Package.HasStructs() || Package.HasEnums())
 		{
 			StructsFile = StreamType(Subfolder / (FileName + "_structs.hpp"));
+
+			if (!StructsFile.is_open())
+				std::cout << "Error opening file \"" << (FileName + "_structs.hpp") << "\"" << std::endl;
+
 			WriteFileHead(StructsFile, Package, EFileType::Structs);
 
 			/* Write enum foward declarations before all of the structs */
@@ -1555,12 +1569,20 @@ void CppGenerator::Generate()
 		if (Package.HasParameterStructs())
 		{
 			ParametersFile = StreamType(Subfolder / (FileName + "_parameters.hpp"));
+
+			if (!ParametersFile.is_open())
+				std::cout << "Error opening file \"" << (FileName + "_parameters.hpp") << "\"" << std::endl;
+
 			WriteFileHead(ParametersFile, Package, EFileType::Parameters);
 		}
 
 		if (Package.HasFunctions())
 		{
 			FunctionsFile = StreamType(Subfolder / (FileName + "_functions.cpp"));
+
+			if (!FunctionsFile.is_open())
+				std::cout << "Error opening file \"" << (FileName + "_functions.cpp") << "\"" << std::endl;
+
 			WriteFileHead(FunctionsFile, Package, EFileType::Functions);
 		}
 
@@ -5227,6 +5249,10 @@ namespace UC
 
 			return L"";
 		}
+
+	public:
+		inline       wchar_t* CStr()       { return Data; }
+		inline const wchar_t* CStr() const { return Data; }
 
 	public:
 		inline bool operator==(const FString& Other) const { return Other ? NumElements == Other.NumElements && wcscmp(Data, Other.Data) == 0 : false; }
