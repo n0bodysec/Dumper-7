@@ -4,10 +4,10 @@
 #include <algorithm>
 
 
-MemberManager::MemberManager(UEStruct Str, bool CheckFlags)
+MemberManager::MemberManager(UEStruct Str)
 	: Struct(std::make_shared<StructWrapper>(Str))
 	, Functions(Str.GetFunctions())
-	, Members(Str.GetProperties(CheckFlags))
+	, Members(Str.GetProperties())
 {
 	// sorts functions/members in O(n * log(n)), can be sorted via radix, O(n), but the overhead might not be worth it
 	std::sort(Functions.begin(), Functions.end(), CompareUnrealFunctions);
