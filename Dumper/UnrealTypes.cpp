@@ -87,6 +87,7 @@ void FName::Init(bool bForceGNames)
 		"48 8D ? ? 49 8B ? E8",
 		"48 8D ? ? ? 49 8B ? E8",
 		"48 8D ? ? 48 8B ? E8"
+		"48 8D ? ? ? 48 8B ? E8",
 	};
 
 	MemAddress StringRef = FindByStringInAllSections("ForwardShadingQuality_");
@@ -94,7 +95,7 @@ void FName::Init(bool bForceGNames)
 	int i = 0;
 	while (!AppendString && i < PossibleSigs.size())
 	{
-		AppendString = reinterpret_cast<void(*)(void*, FString&)>(StringRef.RelativePattern(PossibleSigs[i], 0x50, -1 /* auto */));
+		AppendString = reinterpret_cast<void(*)(void*, FString&)>(static_cast<void*>(StringRef.RelativePattern(PossibleSigs[i], 0x50, -1 /* auto */)));
 		i++;
 	}
 
@@ -185,7 +186,7 @@ void FName::InitFallback()
 	int i = 0;
 	while (!AppendString && i < PossibleSigs.size())
 	{
-		AppendString = reinterpret_cast<void(*)(void*, FString&)>(Conv_NameToStringAddress.RelativePattern(PossibleSigs[i], 0x90, -1 /* auto */));
+		AppendString = reinterpret_cast<void(*)(void*, FString&)>(static_cast<void*>(Conv_NameToStringAddress.RelativePattern(PossibleSigs[i], 0x90, -1 /* auto */)));
 		i++;
 	}
 
