@@ -1682,7 +1682,7 @@ void CppGenerator::InitPredefinedMembers()
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
-			.Type = "void*", .Name = "VfTable", .Offset = Off::UObject::Vft, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
+			.Type = "void*", .Name = "VTable", .Offset = Off::UObject::Vft, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
 			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
@@ -1692,7 +1692,7 @@ void CppGenerator::InitPredefinedMembers()
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
-			.Type = "int32", .Name = "InternalIndex", .Offset = Off::UObject::Index, .Size = 0x4, .ArrayDim = 0x1, .Alignment = 0x4,
+			.Type = "int32", .Name = "Index", .Offset = Off::UObject::Index, .Size = 0x4, .ArrayDim = 0x1, .Alignment = 0x4,
 			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
@@ -2123,7 +2123,7 @@ void CppGenerator::InitPredefinedMembers()
 		{
 			PredefinedMember {
 				.Comment = "NOT AUTO-GENERATED PROPERTY",
-				.Type = "void*", .Name = "VfTable", .Offset = Off::FField::Vft, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
+				.Type = "void*", .Name = "VTable", .Offset = Off::FField::Vft, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
 				.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
 			},
 			PredefinedMember {
@@ -2626,7 +2626,7 @@ R"({
 		},
 		PredefinedFunction {
 			.CustomComment = "",
-			.ReturnType = "FVector", .NameWithParams = "operator*(float Scalar)", .Body =
+			.ReturnType = "FVector", .NameWithParams = "operator*(UnderlayingType Scalar)", .Body =
 R"({
 	return { X * Scalar, Y * Scalar, Z * Scalar };
 })",
@@ -2642,9 +2642,9 @@ R"({
 		},
 		PredefinedFunction {
 			.CustomComment = "",
-			.ReturnType = "FVector", .NameWithParams = "operator/(float Scalar)", .Body =
+			.ReturnType = "FVector", .NameWithParams = "operator/(UnderlayingType Scalar)", .Body =
 R"({
-	if (Scalar == 0.0f)
+	if (Scalar == 0.0)
 		return *this;
 
 	return { X / Scalar, Y / Scalar, Z / Scalar };
@@ -2655,7 +2655,7 @@ R"({
 			.CustomComment = "",
 			.ReturnType = "FVector", .NameWithParams = "operator/(const FVector& Other)", .Body =
 R"({
-	if (Other.X == 0.0f || Other.Y == 0.0f ||Other.Z == 0.0f)
+	if (Other.X == 0.0 || Other.Y == 0.0 || Other.Z == 0.0)
 		return *this;
 
 	return { X / Other.X, Y / Other.Y, Z / Other.Z };
@@ -2700,7 +2700,7 @@ R"({
 		},
 		PredefinedFunction {
 			.CustomComment = "",
-			.ReturnType = "FVector&", .NameWithParams = "operator*=(float Scalar)", .Body =
+			.ReturnType = "FVector&", .NameWithParams = "operator*=(UnderlayingType Scalar)", .Body =
 R"({
 	*this = *this * Scalar;
 	return *this;
@@ -2718,7 +2718,7 @@ R"({
 		},
 		PredefinedFunction {
 			.CustomComment = "",
-			.ReturnType = "FVector&", .NameWithParams = "operator/=(float Scalar)", .Body =
+			.ReturnType = "FVector&", .NameWithParams = "operator/=(UnderlayingType Scalar)", .Body =
 R"({
 	*this = *this / Scalar;
 	return *this;
@@ -2781,7 +2781,7 @@ R"({
 			.CustomComment = "",
 			.ReturnType = "UnderlayingType", .NameWithParams = "GetDistanceToInMeters(const FVector& Other)", .Body =
 R"({
-	return GetDistanceTo(Other) * (UnderlayingType)0.01;
+	return GetDistanceTo(Other) * static_cast<UnderlayingType>(0.01);
 })",
 			.bIsStatic = false, .bIsConst = true, .bIsBodyInline = true
 		},
@@ -3019,9 +3019,9 @@ namespace InSDKUtils
 	BasicHpp << R"(	template<typename FuncType>
 	inline FuncType GetVirtualFunction(const void* ObjectInstance, int32 Index)
 	{
-		void** VfTable = *reinterpret_cast<void***>(const_cast<void*>(ObjectInstance));
+		void** VTable = *reinterpret_cast<void***>(const_cast<void*>(ObjectInstance));
 
-		return reinterpret_cast<FuncType>(VfTable[Index]);
+		return reinterpret_cast<FuncType>(VTable[Index]);
 	}
 )";
 
@@ -3119,7 +3119,7 @@ std::string BasicFilesImpleUtils::GetObjectName(class UClass* Class)
 
 int32 BasicFilesImpleUtils::GetObjectIndex(class UClass* Class)
 {
-	return Class->InternalIndex;
+	return Class->Index;
 }
 
 uint64 BasicFilesImpleUtils::GetObjFNameAsUInt64(class UClass* Class)
@@ -4162,7 +4162,7 @@ R"({
 			.CustomComment = "",
 			.ReturnType = "bool", .NameWithParams = "operator==(const class UObject* Other)", .Body =
 R"({
-	return ObjectIndex == Other->InternalIndex;
+	return ObjectIndex == Other->Index;
 })",
 			.bIsStatic = false, .bIsConst = true, .bIsBodyInline = false
 		},
@@ -4170,7 +4170,7 @@ R"({
 			.CustomComment = "",
 			.ReturnType = "bool", .NameWithParams = "operator!=(const class UObject* Other)", .Body =
 R"({
-	return ObjectIndex != Other->InternalIndex;
+	return ObjectIndex != Other->Index;
 })",
 			.bIsStatic = false, .bIsConst = true, .bIsBodyInline = false
 		},
