@@ -1357,7 +1357,7 @@ void CppGenerator::GenerateSDKHeader(StreamType& SdkHpp)
 
 	auto ForEachElementCallback = [&SdkHpp](const PackageManagerIterationParams& OldParams, const PackageManagerIterationParams& NewParams, bool bIsStruct) -> void
 	{
-		PackageInfoHandle CurrentPackage = PackageManager::GetInfo(NewParams.RequiredPackge);
+		PackageInfoHandle CurrentPackage = PackageManager::GetInfo(NewParams.RequiredPackage);
 
 		const bool bHasClassesFile = CurrentPackage.HasClasses();
 		const bool bHasStructsFile = (CurrentPackage.HasStructs() || CurrentPackage.HasEnums());
@@ -1659,18 +1659,35 @@ void CppGenerator::InitPredefinedMembers()
 	};
 
 
-	if (Off::ULevel::Actors != -1)
+	if (Off::InSDK::ULevel::Actors != -1)
 	{
-		PredefinedElements& ULevelPredefs = PredefinedMembers[ObjectArray::FindClassFast("Level").GetIndex()];
+		UEClass Level = ObjectArray::FindClassFast("Level");
+
+		if (Level == nullptr)
+			Level = ObjectArray::FindClassFast("level");
+
+		PredefinedElements& ULevelPredefs = PredefinedMembers[Level.GetIndex()];
 		ULevelPredefs.Members =
 		{
 			PredefinedMember {
 				.Comment = "THIS IS THE ARRAY YOU'RE LOOKING FOR! [NOT AUTO-GENERATED PROPERTY]",
-				.Type = "class TArray<class AActor*>", .Name = "Actors", .Offset = Off::ULevel::Actors, .Size = 0x10, .ArrayDim = 0x1, .Alignment = 0x8,
-				.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+				.Type = "class TArray<class AActor*>", .Name = "Actors", .Offset = Off::InSDK::ULevel::Actors, .Size = 0x10, .ArrayDim = 0x1, .Alignment = 0x8,
+				.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 			},
 		};
 	}
+
+	UEClass DataTable = ObjectArray::FindClassFast("DataTable");
+
+	PredefinedElements& UDataTablePredefs = PredefinedMembers[DataTable.GetIndex()];
+	UDataTablePredefs.Members =
+	{
+		PredefinedMember {
+			.Comment = "So, here's a RowMap. Good luck with it.",
+			.Type = "TMap<class FName, uint8*>", .Name = "RowMap", .Offset = Off::InSDK::UDataTable::RowMap, .Size = 0x50, .ArrayDim = 0x1, .Alignment = 0x8,
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
+		},
+	};
 
 	PredefinedElements& UObjectPredefs = PredefinedMembers[ObjectArray::FindClassFast("Object").GetIndex()];
 	UObjectPredefs.Members = 
@@ -1678,37 +1695,37 @@ void CppGenerator::InitPredefinedMembers()
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "inline class TUObjectArrayWrapper", .Name = "GObjects", .Offset = 0x0, .Size = sizeof(void*), .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = true, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = true, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "void*", .Name = "VTable", .Offset = Off::UObject::Vft, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "EObjectFlags", .Name = "Flags", .Offset = Off::UObject::Flags, .Size = 0x4, .ArrayDim = 0x1, .Alignment = 0x4,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "int32", .Name = "Index", .Offset = Off::UObject::Index, .Size = 0x4, .ArrayDim = 0x1, .Alignment = 0x4,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class UClass*", .Name = "Class", .Offset = Off::UObject::Class, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class FName", .Name = "Name", .Offset = Off::UObject::Name, .Size = Off::InSDK::Name::FNameSize, .ArrayDim = 0x1, .Alignment = 0x4,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class UObject*", .Name = "Outer", .Offset = Off::UObject::Outer, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 	};
 
@@ -1718,7 +1735,7 @@ void CppGenerator::InitPredefinedMembers()
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class UField*", .Name = "Next", .Offset = Off::UField::Next, .Size = 0x8, .ArrayDim = 0x1, .Alignment =0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 	};
 
@@ -1728,7 +1745,7 @@ void CppGenerator::InitPredefinedMembers()
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class TArray<class TPair<class FName, int64>>", .Name = "Names", .Offset = Off::UEnum::Names, .Size = 0x10, .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 	};
 
@@ -1743,22 +1760,22 @@ void CppGenerator::InitPredefinedMembers()
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class UStruct*", .Name = "Super", .Offset = Off::UStruct::SuperStruct, .Size = 0x08, .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "class UField*", .Name = "Children", .Offset = Off::UStruct::Children, .Size = 0x08, .ArrayDim = 0x1, .Alignment = 0x8,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "int32", .Name = "MinAlignemnt", .Offset = Off::UStruct::MinAlignemnt, .Size = 0x04, .ArrayDim = 0x1, .Alignment = 0x4,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 		PredefinedMember {
 			.Comment = "NOT AUTO-GENERATED PROPERTY",
 			.Type = "int32", .Name = "Size", .Offset = Off::UStruct::Size, .Size = 0x4, .ArrayDim = 0x1, .Alignment = 0x4,
-			.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+			.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 		},
 	};
 
@@ -2124,7 +2141,7 @@ void CppGenerator::InitPredefinedMembers()
 			PredefinedMember {
 				.Comment = "NOT AUTO-GENERATED PROPERTY",
 				.Type = "void*", .Name = "VTable", .Offset = Off::FField::Vft, .Size = 0x8, .ArrayDim = 0x1, .Alignment = 0x8,
-				.bIsStatic = false, .bIsZeroSizeMember = false,.bIsBitField = false, .BitIndex = 0xFF
+				.bIsStatic = false, .bIsZeroSizeMember = false, .bIsBitField = false, .BitIndex = 0xFF
 			},
 			PredefinedMember {
 				.Comment = "NOT AUTO-GENERATED PROPERTY",
@@ -5163,7 +5180,7 @@ namespace UC
 	template <typename KeyType, typename ValueType>
 	class TPair
 	{
-	private:
+	public:
 		KeyType First;
 		ValueType Second;
 
