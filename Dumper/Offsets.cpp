@@ -228,12 +228,12 @@ void Off::Init()
 
 		Off::FField::Next = OffsetFinder::FindFFieldNextOffset();
 		std::cout << std::format("Off::FField::Next: 0x{:X}\n", Off::FField::Next);
-		
+
 		Off::FField::Name = OffsetFinder::FindFFieldNameOffset();
 		std::cout << std::format("Off::FField::Name: 0x{:X}\n", Off::FField::Name);
 
-		/* 
-		* FNameSize might be wrong at this point of execution. 
+		/*
+		* FNameSize might be wrong at this point of execution.
 		* FField::Flags is not critical so a fix is only applied later in OffsetFinder::PostInitFNameSettings().
 		*/
 		Off::FField::Flags = Off::FField::Name + Off::InSDK::Name::FNameSize;
@@ -269,10 +269,10 @@ void Off::Init()
 
 	Off::ArrayProperty::Inner = OffsetFinder::FindInnerTypeOffset(Off::InSDK::Properties::PropertySize);
 	std::cout << std::format("Off::ArrayProperty::Inner: 0x{:X}\n", Off::ArrayProperty::Inner);
-	
+
 	Off::SetProperty::ElementProp = OffsetFinder::FindSetPropertyBaseOffset(Off::InSDK::Properties::PropertySize);
 	std::cout << std::format("Off::SetProperty::ElementProp: 0x{:X}\n", Off::SetProperty::ElementProp);
-	
+
 	Off::MapProperty::Base = OffsetFinder::FindMapPropertyBaseOffset(Off::InSDK::Properties::PropertySize);
 	std::cout << std::format("Off::MapProperty::Base: 0x{:X}\n", Off::MapProperty::Base) << std::endl;
 
@@ -291,9 +291,86 @@ void Off::Init()
 	Off::ObjectProperty::PropertyClass = Off::InSDK::Properties::PropertySize;
 	Off::StructProperty::Struct = Off::InSDK::Properties::PropertySize;
 	Off::EnumProperty::Base = Off::InSDK::Properties::PropertySize;
-	Off::DelegateProperty::SignatureFunction =  Off::InSDK::Properties::PropertySize;
+	Off::DelegateProperty::SignatureFunction = Off::InSDK::Properties::PropertySize;
 	Off::FieldPathProperty::FieldClass = Off::InSDK::Properties::PropertySize;
 	Off::OptionalProperty::ValueProperty = Off::InSDK::Properties::PropertySize;
 
 	Off::ClassProperty::MetaClass = Off::InSDK::Properties::PropertySize + 0x8; //0x8 inheritance from ObjectProperty
+}
+
+void PropertySizes::Init()
+{
+	InitTDelegateSize();
+	InitFFieldPathSize();
+}
+
+void PropertySizes::InitTDelegateSize()
+{
+	/* If the AudioComponent class or the OnQueueSubtitles member weren't found, fallback to looping GObjects and looking for a Delegate. */
+	auto OnPropertyNotFoudn = [&]() -> void
+	{
+		for (UEObject Obj : ObjectArray())
+		{
+			if (!Obj.IsA(EClassCastFlags::Struct))
+				continue;
+
+			for (UEProperty Prop : Obj.Cast<UEClass>().GetProperties())
+			{
+				if (Prop.IsA(EClassCastFlags::DelegateProperty))
+				{
+					PropertySizes::DelegateProperty = Prop.GetSize();
+					return;
+				}
+			}
+		}
+	};
+
+	const UEClass AudioComponentClass = ObjectArray::FindClassFast("AudioComponent");
+
+	if (!AudioComponentClass)
+		return OnPropertyNotFoudn();
+
+	const UEProperty OnQueueSubtitlesProp = AudioComponentClass.FindMember("OnQueueSubtitles", EClassCastFlags::DelegateProperty);
+
+	if (!OnQueueSubtitlesProp)
+		return OnPropertyNotFoudn();
+
+	PropertySizes::DelegateProperty = OnQueueSubtitlesProp.GetSize();
+}
+
+void PropertySizes::InitFFieldPathSize()
+{
+	if (!Settings::Internal::bUseFProperty)
+		return;
+
+	/* If the SetFieldPathPropertyByName function or the Value parameter weren't found, fallback to looping GObjects and looking for a Delegate. */
+	auto OnPropertyNotFoudn = [&]() -> void
+	{
+		for (UEObject Obj : ObjectArray())
+		{
+			if (!Obj.IsA(EClassCastFlags::Struct))
+				continue;
+
+			for (UEProperty Prop : Obj.Cast<UEClass>().GetProperties())
+			{
+				if (Prop.IsA(EClassCastFlags::FieldPathProperty))
+				{
+					PropertySizes::FieldPathProperty = Prop.GetSize();
+					return;
+				}
+			}
+		}
+	};
+
+	const UEFunction SetFieldPathPropertyByNameFunc = ObjectArray::FindObjectFast<UEFunction>("SetFieldPathPropertyByName", EClassCastFlags::Function);
+
+	if (!SetFieldPathPropertyByNameFunc)
+		return OnPropertyNotFoudn();
+
+	const UEProperty ValueParamProp = SetFieldPathPropertyByNameFunc.FindMember("Value", EClassCastFlags::FieldPathProperty);
+
+	if (!ValueParamProp)
+		return OnPropertyNotFoudn();
+
+	PropertySizes::FieldPathProperty = ValueParamProp.GetSize();
 }

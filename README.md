@@ -13,25 +13,13 @@ SDK Generator for all Unreal Engine games. Supported versions are all of UE4 and
 
 KoFi: https://ko-fi.com/fischsalat \
 Patreon: https://patreon.com/user?u=119629245
-## Changelog
-
-### Summary:
-- Added TUObjectArrayWrapper which automatically initializes `GObjects` the first time it's accessed
-- Added predefined member **ULevel::Actors** to the SDK
-- Added support for more Properties
-- Functions with `EFunctionFlags::Static` are now automatically called on the classes' DefaultObject
-- Fixed name-collisions between classes/structs, between enums, between members/functions, and between packages
-- Fixed cyclic dependencies
-- Fixed incorrect size/alignment on classes
-  
-You can  find the full changelog for the new GeneratorRewrite in [Changelog.md](Changelog.md).
 
 ## Overriding Offsets
 
-- ### Only override any offsets if the generator doesn't find them by itself
+- ### Only override any offsets if the generator doesn't find them, or if they are incorrect
 - All overrides are made in **Generator::InitEngineCore()** inside of **Generator.cpp**
 
-- GObjects
+- GObjects (see [GObjects-Layout](#overriding-gobjects-layout) too)
   ```cpp
   ObjectArray::Init(/*GObjectsOffset*/, /*ChunkSize*/, /*bIsChunked*/);
   ```
@@ -40,14 +28,42 @@ You can  find the full changelog for the new GeneratorRewrite in [Changelog.md](
   InitObjectArrayDecryption([](void* ObjPtr) -> uint8* { return reinterpret_cast<uint8*>(uint64(ObjPtr) ^ 0x8375); });
   ```
 - FName::AppendString
-  ```cpp
-  FName::Init(/*FName::AppendStringOffset*/);
-  ```
+  - Forcing GNames:
+    ```cpp
+    FName::Init(/*bForceGNames*/); // Useful if the AppendString offset is wrong
+    ```
+  - Overriding the offset:
+    ```cpp
+    FName::Init(/*OverrideOffset, OverrideType=[AppendString, ToString, GNames], bIsNamePool*/);
+    ```
 - ProcessEvent
   ```cpp
   Off::InSDK::InitPE(/*PEIndex*/);
   ```
-
+## Overriding GObjects-Layout
+- Only add a new layout if GObjects isn't automatically found for your game.
+- Layout overrides are at roughly line 30 of `ObjectArray.cpp`
+- For UE4.11 to UE4.20 add the layout to `FFixedUObjectArrayLayouts`
+- For UE4.21 and higher add the layout to `FChunkedFixedUObjectArrayLayouts`
+- **Examples:**
+  ```cpp
+  FFixedUObjectArrayLayout // Default UE4.11 - UE4.20
+  {
+      .ObjectsOffset = 0x0,
+      .MaxObjectsOffset = 0x8,
+      .NumObjectsOffset = 0xC
+  }
+  ```
+  ```cpp
+  FChunkedFixedUObjectArrayLayout // Default UE4.21 and above
+  {
+      .ObjectsOffset = 0x00,
+      .MaxElementsOffset = 0x10,
+      .NumElementsOffset = 0x14,
+      .MaxChunksOffset = 0x18,
+      .NumChunksOffset = 0x1C,
+  }
+  ``` 
 ## Issues
 
 If you have any issues using the Dumper, please create an Issue on this repository\
